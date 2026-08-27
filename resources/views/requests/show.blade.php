@@ -25,11 +25,7 @@
         <div class="block-title" style="margin-top:0">Aggiungi foto del problema</div>
         <form method="POST" action="{{ route('richieste.foto', $req) }}" enctype="multipart/form-data" data-guard>
             @csrf
-            <div class="uploader" data-uploader>
-                <div>📷 <label>Aggiungi foto<input type="file" name="foto[]" accept="image/*" multiple style="display:none"></label></div>
-                <div class="hint">Scatta una foto o scegli dalla galleria</div>
-                <div class="thumbs" data-thumbs></div>
-            </div>
+            <x-photo-uploader hint="Scatta la foto del problema o scegli dalla galleria" />
             <button type="submit" class="btn btn-ghost btn-sm mt8">Carica foto</button>
         </form>
     </div>
@@ -70,11 +66,7 @@
 
             <div class="field">
                 <label>Foto soluzione</label>
-                <div class="uploader" data-uploader>
-                    <div>📷 <label>Aggiungi foto della soluzione<input type="file" name="foto[]" accept="image/*" multiple style="display:none"></label></div>
-                    <div class="hint">Scatta una foto o scegli dalla galleria</div>
-                    <div class="thumbs" data-thumbs></div>
-                </div>
+                <x-photo-uploader hint="Scatta la foto della soluzione o scegli dalla galleria" />
             </div>
 
             <button type="submit" class="btn btn-primary btn-block btn-lg">Salva aggiornamento</button>

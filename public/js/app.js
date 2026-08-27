@@ -72,19 +72,23 @@
   }
 
   document.querySelectorAll('[data-uploader]').forEach((box) => {
-    const input = box.querySelector('input[type=file]');
+    const pickers = box.querySelectorAll('input[data-picker]');
+    const carrier = box.querySelector('input[data-carrier]');
     const thumbs = box.querySelector('[data-thumbs]');
-    if (!input || !thumbs) return;
-    let files = [];
+    if (!pickers.length || !carrier || !thumbs) return;
+    const files = [];
 
-    input.addEventListener('change', async () => {
-      const picked = Array.from(input.files || []);
-      for (const f of picked) {
-        const c = await compressImage(f, 1600, 0.82);
-        files.push(c);
-        addThumb(c);
-      }
-      syncInput();
+    pickers.forEach((picker) => {
+      picker.addEventListener('change', async () => {
+        const picked = Array.from(picker.files || []);
+        picker.value = ''; // consenti di riscattare/riscegliere lo stesso file
+        for (const f of picked) {
+          const c = await compressImage(f, 1600, 0.82);
+          files.push(c);
+          addThumb(c);
+        }
+        syncCarrier();
+      });
     });
 
     function addThumb(file) {
@@ -96,15 +100,15 @@
       rm.type = 'button'; rm.className = 'rm'; rm.textContent = '×';
       rm.addEventListener('click', () => {
         const i = files.indexOf(file); if (i >= 0) files.splice(i, 1);
-        t.remove(); URL.revokeObjectURL(url); syncInput();
+        t.remove(); URL.revokeObjectURL(url); syncCarrier();
       });
       t.append(img, rm); thumbs.append(t);
     }
 
-    function syncInput() {
+    function syncCarrier() {
       const dt = new DataTransfer();
       files.forEach((f) => dt.items.add(f));
-      input.files = dt.files;
+      carrier.files = dt.files;
     }
   });
 

@@ -94,11 +94,7 @@
         {{-- Foto --}}
         <div class="field">
             <label>Foto del problema</label>
-            <div class="uploader" data-uploader>
-                <div>📷 <label>Aggiungi foto del problema<input type="file" name="foto[]" accept="image/*" multiple style="display:none"></label></div>
-                <div class="hint">Scatta una foto o scegli dalla galleria</div>
-                <div class="thumbs" data-thumbs></div>
-            </div>
+            <x-photo-uploader hint="Scatta la foto del problema o scegli dalla galleria" />
             @error('foto.*')<div class="field-error">{{ $message }}</div>@enderror
         </div>
 
