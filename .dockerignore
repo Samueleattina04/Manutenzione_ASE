@@ -1,5 +1,10 @@
-node_modules
-data
 .git
-*.log
 .env
+vendor
+node_modules
+storage/app/private/uploads
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+tests

@@ -1,17 +1,56 @@
 services:
-  manutenzione:
+  app:
     build: .
-    container_name: manutenzione-ase
+    container_name: manutenzione-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8000:8000"
     environment:
-      NODE_ENV: production
-      JWT_SECRET: "cambia-questo-segreto-in-produzione"
-      # Rete interna senza HTTPS? decommenta:
-      # DISABLE_SECURE_COOKIE: "1"
+      APP_NAME: "Manutenzione ASE"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "http://localhost:8000"
+      APP_LOCALE: it
+      APP_FALLBACK_LOCALE: en
+      # Consigliato: genera una chiave con `php artisan key:generate --show`
+      # e incollala qui. Se lasciata vuota, viene generata e resa persistente.
+      APP_KEY: ""
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: manutenzione_ase
+      DB_USERNAME: manutenzione
+      DB_PASSWORD: manutenzione
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      LOG_CHANNEL: stack
+      MAIL_MAILER: log
     volumes:
-      - manutenzione-data:/data
+      # Foto caricate (disco privato) persistenti
+      - uploads:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8
+    container_name: manutenzione-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: manutenzione_ase
+      MYSQL_USER: manutenzione
+      MYSQL_PASSWORD: manutenzione
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pmanutenzione", "-umanutenzione"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
 volumes:
-  manutenzione-data:
+  uploads:
+  dbdata:

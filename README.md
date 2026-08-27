@@ -1,16 +1,16 @@
 # 🔧 Manutenzione ASE
 
-Applicativo web per la **gestione delle richieste di manutenzione**. Sostituisce il
-vecchio modulo Google + foglio di risposte, aggiungendo tutto ciò che prima mancava:
-presa in carico, cambio di stato in tempo reale, storico degli interventi con data e
-ora, descrizione di quello che il manutentore ha fatto e **foto** sia del problema che
-della soluzione.
+Applicativo web (**PHP / Laravel / MySQL**) per la **gestione delle richieste di
+manutenzione**. Sostituisce il vecchio modulo Google + foglio di risposte,
+aggiungendo tutto ciò che prima mancava: presa in carico, cambio di stato,
+storico degli interventi con data e ora, descrizione di quello che il
+manutentore ha fatto e **foto** sia del problema che della soluzione.
 
 Due profili con viste diverse:
 
 - **Operatore** — apre le richieste (stesso modulo di prima) e segue l'avanzamento.
-- **Manutentore** — riceve subito le richieste, le prende in carico, aggiorna lo stato
-  e registra l'intervento.
+- **Manutentore** — riceve subito le richieste, le prende in carico, aggiorna lo
+  stato e registra l'intervento.
 - **Amministratore** — come il manutentore, più la gestione degli utenti.
 
 ---
@@ -22,38 +22,53 @@ Due profili con viste diverse:
 | Non si registrava nulla dell'intervento del manutentore | Ogni intervento è salvato con autore, data/ora e descrizione |
 | Non si sapeva quando la richiesta veniva risolta | Vengono registrati apertura, presa in carico e risoluzione, con il tempo impiegato |
 | Nessuna presa in carico | Il manutentore prende in carico la richiesta con un click |
-| Stato non visibile all'operatore | L'operatore vede lo stato aggiornato in tempo reale |
+| Stato non visibile all'operatore | L'operatore vede lo stato aggiornato quasi in tempo reale |
 | L'operatore non poteva allegare foto del problema | Foto del problema caricabili dal telefono al momento della richiesta |
 | Il manutentore non poteva allegare foto della soluzione | Foto della soluzione allegabili ad ogni intervento |
 
 ### Stati di una richiesta
 
-`Aperta` → `Presa in carico` → `In corso` → `Risolta parzialmente` → `Risolta
-completamente` → `Chiusa`
-
-Ogni cambio di stato è visibile immediatamente a operatori e manutentori.
+`Aperta` → `Presa in carico` → `In corso` → `Risolta parzialmente` →
+`Risolta completamente` → `Chiusa`
 
 ---
 
 ## Requisiti
 
-- **Node.js 18 o superiore** (consigliato 20/22), oppure **Docker**.
+- **PHP 8.2+** con le estensioni: `pdo_mysql`, `mbstring`, `gd`, `fileinfo`,
+  `openssl`, `tokenizer`, `xml`, `ctype`, `curl`
+- **Composer 2**
+- **MySQL 8** (o MariaDB 10.4+)
 
-Nessun database esterno da installare: i dati sono salvati in un file SQLite dentro la
-cartella `data/` (comprese le foto in `data/uploads/`).
+Oppure semplicemente **Docker** (vedi sotto).
 
 ---
 
-## Avvio rapido (Node.js)
+## Installazione (manuale)
 
 ```bash
-npm install
-npm start
+# 1) Dipendenze PHP
+composer install
+
+# 2) Configurazione
+cp .env.example .env
+php artisan key:generate
+# apri .env e imposta i dati del database (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+
+# 3) Crea il database MySQL (una volta)
+#    CREATE DATABASE manutenzione_ase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#    e un utente con permessi su quel database.
+
+# 4) Tabelle + utenti iniziali
+php artisan migrate --seed
+
+# 5) Avvio (sviluppo/rete interna)
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-Poi apri il browser su **http://localhost:3000**
+Apri il browser su **http://SERVER:8000**
 
-Al primo avvio vengono creati automaticamente tre utenti di prova:
+### Utenti creati al primo avvio
 
 | Ruolo | Username | Password |
 |---|---|---|
@@ -68,41 +83,21 @@ Al primo avvio vengono creati automaticamente tre utenti di prova:
 
 ## Avvio con Docker
 
-Con Docker Compose (consigliato):
+Il modo più rapido: avvia sia l'applicativo che MySQL con un comando.
 
 ```bash
 docker compose up -d --build
 ```
 
-Oppure con Docker semplice:
+- Applicativo su **http://localhost:8000**
+- Migrazioni e utenti iniziali vengono creati automaticamente.
+- Le foto e il database restano nei volumi Docker (`uploads`, `dbdata`).
 
-```bash
-docker build -t manutenzione-ase .
-docker run -d -p 3000:3000 -v manutenzione-data:/data \
-  -e JWT_SECRET="una-stringa-lunga-e-casuale" \
-  --name manutenzione-ase manutenzione-ase
-```
-
-I dati (database + foto) restano nel volume `manutenzione-data` (montato su `/data`) e
-sopravvivono ai riavvii e agli aggiornamenti del container.
-
----
-
-## Configurazione
-
-Le impostazioni si passano tramite variabili d'ambiente (vedi `.env.example`):
-
-| Variabile | Default | Descrizione |
-|---|---|---|
-| `PORT` | `3000` | Porta del server web |
-| `JWT_SECRET` | *(valore di sviluppo)* | **Da cambiare in produzione**: firma i token di sessione |
-| `DATA_DIR` | `./data` | Cartella di database e foto |
-| `NODE_ENV` | — | Impostare a `production` in produzione |
-| `DISABLE_SECURE_COOKIE` | — | Impostare a `1` se si usa `production` **senza HTTPS** (es. rete interna) |
-
-> In `production` i cookie di login vengono inviati solo su HTTPS. Se il server è
-> raggiungibile solo via `http://` (tipico su rete aziendale interna), imposta
-> `DISABLE_SECURE_COOKIE=1`, altrimenti il login non funziona.
+> Per la produzione conviene generare una chiave stabile e inserirla in
+> `docker-compose.yml` (`APP_KEY`):
+> ```bash
+> php artisan key:generate --show
+> ```
 
 ---
 
@@ -110,57 +105,60 @@ Le impostazioni si passano tramite variabili d'ambiente (vedi `.env.example`):
 
 ### Operatore
 1. Accede e apre **Nuova** richiesta.
-2. Compila il modulo (impianto, macchinario, reparto, descrizione, priorità, note,
-   operatore) e può **allegare foto del problema**.
-3. Dalla lista **Richieste** segue lo stato di ogni segnalazione in tempo reale.
+2. Compila il modulo (impianto, macchinario, reparto, descrizione, priorità,
+   note, operatore) e può **allegare foto del problema**.
+3. Dalla lista **Richieste** segue lo stato di ogni segnalazione.
 
 ### Manutentore
 1. Vede tutte le richieste ordinate per priorità (rosso/giallo/verde) e data.
 2. Apre una richiesta e clicca **Prendi in carico**.
-3. Aggiorna lo stato (in corso, risolta parzialmente/completamente, chiusa), scrive la
-   **descrizione dell'intervento** e allega le **foto della soluzione**.
+3. Aggiorna lo stato, scrive la **descrizione dell'intervento** e allega le
+   **foto della soluzione**.
 
 ### Amministratore
-- Tutto quello che fa il manutentore, più la sezione **Utenti** per creare, modificare,
-  disattivare gli account e reimpostare le password.
+- Tutto quello che fa il manutentore, più la sezione **Utenti** per creare,
+  modificare, disattivare gli account e reimpostare le password.
 
 ---
 
-## Aggiornamenti in tempo reale
+## Aggiornamenti automatici
 
-L'interfaccia si aggiorna da sola (tecnologia Server-Sent Events, con aggiornamento
-periodico di riserva): quando un operatore apre una richiesta, i manutentori la vedono
-comparire subito, e quando un manutentore cambia stato l'operatore lo vede in tempo
-reale.
+L'elenco delle richieste e il dettaglio si aggiornano da soli ogni pochi secondi
+(polling), così il manutentore vede comparire subito le nuove richieste e
+l'operatore vede il cambio di stato senza ricaricare la pagina.
 
 ---
+
+## Deploy in produzione (nota)
+
+Per un uso intensivo si consiglia di servire l'app con **Nginx + PHP-FPM** e di
+puntare il web server sulla cartella `public/`, invece di `php artisan serve`.
+Ricordarsi di eseguire una volta:
+
+```bash
+php artisan config:cache
+php artisan route:cache
+```
 
 ## Backup
 
-Per salvare tutti i dati è sufficiente copiare la cartella `data/` (o il volume Docker
-`manutenzione-data`). Contiene il database `manutenzione.db` e tutte le foto.
+- **Database**: backup della base dati MySQL `manutenzione_ase`
+  (`mysqldump manutenzione_ase > backup.sql`).
+- **Foto**: cartella `storage/app/private/uploads` (o il volume Docker `uploads`).
 
 ---
 
-## Struttura del progetto
+## Struttura del progetto (Laravel)
 
 ```
-src/
-  server.js              Server Express e rotte principali
-  db.js                  Database SQLite e schema
-  auth.js                Autenticazione (login con cookie sicuro)
-  seed.js                Creazione utenti iniziali
-  lib/constants.js       Impianti, reparti, priorità, stati
-  lib/uploads.js         Gestione upload foto
-  lib/events.js          Aggiornamenti in tempo reale (SSE)
-  routes/                Rotte API (auth, richieste, utenti, allegati)
-public/
-  index.html             Interfaccia web (single-page)
-  css/styles.css         Stile
-  js/                    Logica dell'interfaccia
+app/
+  Http/Controllers/   Login, Richieste, Utenti, Allegati, Profilo
+  Http/Middleware/    EnsureRole (controllo dei ruoli)
+  Models/             User, MaintenanceRequest, RequestUpdate, Attachment
+config/manutenzione.php   Impianti, reparti, priorità, stati
+database/migrations/  Struttura delle tabelle
+database/seeders/     Utenti iniziali
+resources/views/      Interfaccia (Blade)
+public/css, public/js Stile e piccole interazioni (nessun build necessario)
+routes/web.php        Rotte
 ```
-
-## Tecnologie
-
-Node.js · Express · SQLite (better-sqlite3) · autenticazione JWT su cookie ·
-frontend in JavaScript senza framework · nessun servizio esterno richiesto.
