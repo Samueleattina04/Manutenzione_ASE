@@ -1,0 +1,17 @@
+services:
+  manutenzione:
+    build: .
+    container_name: manutenzione-ase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: "cambia-questo-segreto-in-produzione"
+      # Rete interna senza HTTPS? decommenta:
+      # DISABLE_SECURE_COOKIE: "1"
+    volumes:
+      - manutenzione-data:/data
+
+volumes:
+  manutenzione-data:
