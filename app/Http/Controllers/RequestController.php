@@ -70,6 +70,12 @@ class RequestController extends Controller
         }
         $req->save();
 
+        // L'operatore è anonimo (account condiviso): leghiamo la richiesta al
+        // suo dispositivo tramite la sessione, così vede solo le proprie.
+        if ($request->user()->isOperatore()) {
+            $request->session()->push('op_requests', $req->id);
+        }
+
         $this->storePhotos($request, $req, 'problema');
 
         return redirect()
@@ -77,8 +83,10 @@ class RequestController extends Controller
             ->with('ok', 'Richiesta inviata con successo.');
     }
 
-    public function show(MaintenanceRequest $richiesta): View
+    public function show(Request $request, MaintenanceRequest $richiesta): View
     {
+        $this->guardOperatorAccess($request, $richiesta);
+
         $richiesta->load([
             'creator', 'assignee',
             'updates.user', 'updates.attachments',
@@ -89,8 +97,10 @@ class RequestController extends Controller
     }
 
     /** Frammento della cronologia (aggiornamento automatico del dettaglio). */
-    public function timelineFragment(MaintenanceRequest $richiesta): View
+    public function timelineFragment(Request $request, MaintenanceRequest $richiesta): View
     {
+        $this->guardOperatorAccess($request, $richiesta);
+
         $richiesta->load(['creator', 'assignee', 'updates.user', 'updates.attachments', 'attachments']);
 
         return view('requests.partials.detail_body', ['req' => $richiesta]);
@@ -146,6 +156,8 @@ class RequestController extends Controller
     /** Aggiunta foto a una richiesta esistente. */
     public function storeAttachment(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
+        $this->guardOperatorAccess($request, $richiesta);
+
         $request->validate([
             'foto' => ['required', 'array', 'max:8'],
             'foto.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif', 'max:15360'],
@@ -204,6 +216,11 @@ class RequestController extends Controller
         return MaintenanceRequest::query()
             ->with('assignee')
             ->withCount('attachments')
+            // L'operatore vede solo le richieste aperte dal suo dispositivo.
+            ->when(
+                $request->user()->isOperatore(),
+                fn ($q) => $q->whereIn('id', $this->operatorRequestIds($request) ?: [0])
+            )
             ->when($f['status'] === 'attive', fn ($q) => $q->whereNotIn('status', ['risolta', 'chiusa']))
             ->when($f['status'] === 'chiuse', fn ($q) => $q->whereIn('status', ['risolta', 'chiusa']))
             ->when(
@@ -241,11 +258,33 @@ class RequestController extends Controller
 
     private function stats(Request $request): array
     {
+        // Per gli operatori i conteggi sono limitati alle loro richieste.
+        $ids = $request->user()->isOperatore() ? ($this->operatorRequestIds($request) ?: [0]) : null;
+        $base = fn () => $ids === null
+            ? MaintenanceRequest::query()
+            : MaintenanceRequest::whereIn('id', $ids);
+
         return [
-            'attive' => MaintenanceRequest::whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'urgenti' => MaintenanceRequest::where('priorita', 'rosso')
-                ->whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'mie' => MaintenanceRequest::where('created_by', $request->user()->id)->count(),
+            'attive' => $base()->whereNotIn('status', ['risolta', 'chiusa'])->count(),
+            'urgenti' => $base()->where('priorita', 'rosso')->whereNotIn('status', ['risolta', 'chiusa'])->count(),
+            'mie' => $ids === null
+                ? MaintenanceRequest::where('created_by', $request->user()->id)->count()
+                : $base()->count(),
         ];
+    }
+
+    /** ID delle richieste create dal dispositivo dell'operatore (via sessione). */
+    private function operatorRequestIds(Request $request): array
+    {
+        return array_values(array_unique(session('op_requests', [])));
+    }
+
+    /** Blocca l'operatore che tenta di vedere una richiesta non sua. */
+    private function guardOperatorAccess(Request $request, MaintenanceRequest $richiesta): void
+    {
+        if ($request->user()->isOperatore()
+            && ! in_array($richiesta->id, $this->operatorRequestIds($request), true)) {
+            abort(404);
+        }
     }
 }

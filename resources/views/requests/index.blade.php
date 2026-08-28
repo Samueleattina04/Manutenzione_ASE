@@ -21,8 +21,10 @@
                 @endforeach
             </select>
         </form>
-        <a href="{{ request()->fullUrlWithQuery(['mine' => $filters['mine'] ? null : 1]) }}"
-           class="chip {{ $filters['mine'] ? 'active' : '' }}">👤 Le mie</a>
+        @unless(auth()->user()->isOperatore())
+            <a href="{{ request()->fullUrlWithQuery(['mine' => $filters['mine'] ? null : 1]) }}"
+               class="chip {{ $filters['mine'] ? 'active' : '' }}">👤 Le mie</a>
+        @endunless
     </div>
 
     <div class="toolbar" style="margin-top:-6px">

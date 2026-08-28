@@ -7,7 +7,11 @@
 @if($requests->isEmpty())
     <div class="empty">
         <div class="big">📭</div>
-        <div>Nessuna richiesta trovata con questi filtri.</div>
+        @if(auth()->user()->isOperatore())
+            <div>Non hai ancora aperto richieste da questo dispositivo.<br>Tocca <strong>Nuova</strong> per crearne una.</div>
+        @else
+            <div>Nessuna richiesta trovata con questi filtri.</div>
+        @endif
     </div>
 @else
     <div class="cards">

@@ -115,7 +115,13 @@ docker compose up -d --build
 1. Entra dalla pagina iniziale con il pulsante **Operatore** (senza password) e apre **Nuova** richiesta.
 2. Compila il modulo (impianto, macchinario, reparto, descrizione, priorità,
    note, operatore) e può **allegare foto del problema**.
-3. Dalla lista **Richieste** segue lo stato di ogni segnalazione.
+3. Dalla lista **Richieste** segue lo stato **delle proprie** richieste.
+
+> **Privacy tra operatori:** ogni operatore vede solo le richieste aperte **dal
+> proprio dispositivo** (telefono/PC), non quelle degli altri operatori. La
+> visibilità è legata alla sessione del browser: dura quanto `SESSION_LIFETIME`
+> (di default 30 giorni) e vale sullo stesso dispositivo/browser. Manutentori e
+> amministratori vedono invece **tutte** le richieste.
 
 ### Manutentore
 1. Vede tutte le richieste ordinate per priorità (rosso/giallo/verde) e data.
