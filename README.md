@@ -68,13 +68,21 @@ php artisan serve --host=0.0.0.0 --port=8000
 
 Apri il browser su **http://SERVER:8000**
 
-### Utenti creati al primo avvio
+### Accesso
+
+Aprendo il sito si sceglie il profilo:
+
+- **Operatore** → entra **subito, senza username e password** (compila poi il
+  proprio nome nel modulo della richiesta).
+- **Manutentore / Amministratore** → accesso con **username e password**.
+
+Utenti creati al primo avvio:
 
 | Ruolo | Username | Password |
 |---|---|---|
 | Amministratore | `admin` | `admin123` |
-| Operatore | `operatore` | `operatore123` |
 | Manutentore | `manutentore` | `manutentore123` |
+| Operatore (accesso libero) | `operatore` | *(non serve: entra dal pulsante “Operatore”)* |
 
 > ⚠️ **Cambia subito le password** dopo il primo accesso (menu in alto a destra →
 > *Cambia password*) e crea gli utenti reali dalla sezione **Utenti** (come admin).
@@ -104,7 +112,7 @@ docker compose up -d --build
 ## Come si usa
 
 ### Operatore
-1. Accede e apre **Nuova** richiesta.
+1. Entra dalla pagina iniziale con il pulsante **Operatore** (senza password) e apre **Nuova** richiesta.
 2. Compila il modulo (impianto, macchinario, reparto, descrizione, priorità,
    note, operatore) e può **allegare foto del problema**.
 3. Dalla lista **Richieste** segue lo stato di ogni segnalazione.

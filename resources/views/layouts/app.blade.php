@@ -36,7 +36,9 @@
                         <strong>{{ $u->name }}</strong>
                         <span class="role-badge">{{ $u->role }}</span>
                     </div>
-                    <a href="{{ route('profilo.password') }}">🔑 Cambia password</a>
+                    @unless($u->isOperatore())
+                        <a href="{{ route('profilo.password') }}">🔑 Cambia password</a>
+                    @endunless
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit">🚪 Esci</button>

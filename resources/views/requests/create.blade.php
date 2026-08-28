@@ -87,7 +87,9 @@
         {{-- Operatore --}}
         <div class="field">
             <label>Operatore <span class="req">*</span></label>
-            <input type="text" name="operatore" value="{{ old('operatore', auth()->user()->name) }}" placeholder="Il tuo nome">
+            <input type="text" name="operatore"
+                   value="{{ old('operatore', auth()->user()->isOperatore() ? '' : auth()->user()->name) }}"
+                   placeholder="Scrivi il tuo nome e cognome">
             @error('operatore')<div class="field-error">{{ $message }}</div>@enderror
         </div>
 

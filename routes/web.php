@@ -7,7 +7,13 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// --- Autenticazione ---
+// --- Accesso ---
+// Scelta del profilo (pagina iniziale per chi non è autenticato)
+Route::get('/entra', [LoginController::class, 'chooser'])->name('entra');
+// Operatore: accesso libero senza credenziali
+Route::post('/entra/operatore', [LoginController::class, 'enterAsOperatore'])
+    ->middleware('throttle:30,1')->name('entra.operatore');
+// Manutentore / Amministratore: username e password
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

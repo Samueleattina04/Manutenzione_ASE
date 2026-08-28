@@ -4,12 +4,16 @@
 // originale "Richiesta Manutenzione".
 
 return [
-    'impianti' => ['Pisti', 'Vincente', 'Madero quality', 'Madero Pastry'],
+    'impianti' => ['Pisti', 'Vincente', 'Madero 01', 'Madero 104'],
 
     'reparti' => [
         'Madero Produzione',
-        'Madero Sgusciatura',
+        'Flowpack',
+        'Lievitati',
         'Magazzino',
+        'Magazzino 01',
+        'Magazzino 20',
+        'Magazzino 135',
         'Celle',
         'Pisti Crema',
         'Pisti cioccolateria',
@@ -20,6 +24,9 @@ return [
         'Uffici',
         'Esterno',
     ],
+
+    // Account condiviso usato dall'accesso libero degli operatori (senza password).
+    'guest_operator_username' => 'operatore',
 
     // value => [etichetta, colore, rango per ordinamento]
     'priorita' => [

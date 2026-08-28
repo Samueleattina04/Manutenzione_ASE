@@ -57,16 +57,10 @@ class MaintenanceRequest extends Model
         return (bool) (config("manutenzione.stati.{$this->status}.done") ?? false);
     }
 
-    /**
-     * Chi può eliminare la richiesta:
-     * - un amministratore, sempre;
-     * - l'operatore che l'ha creata, solo finché è ancora "aperta"
-     *   (cioè prima che un manutentore la prenda in carico).
-     */
+    /** Solo l'amministratore può eliminare le richieste. */
     public function deletableBy(User $user): bool
     {
-        return $user->isAdmin()
-            || ($this->created_by === $user->id && $this->status === 'aperta');
+        return $user->isAdmin();
     }
 
     /** Tempo trascorso tra apertura e risoluzione, in formato leggibile. */

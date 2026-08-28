@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
     {
         $defaults = [
             ['name' => 'Amministratore', 'username' => 'admin', 'password' => 'admin123', 'role' => 'admin'],
-            ['name' => 'Operatore Demo', 'username' => 'operatore', 'password' => 'operatore123', 'role' => 'operatore'],
+            ['name' => 'Operatore', 'username' => 'operatore', 'password' => 'operatore123', 'role' => 'operatore'],
             ['name' => 'Manutentore Demo', 'username' => 'manutentore', 'password' => 'manutentore123', 'role' => 'manutentore'],
         ];
 

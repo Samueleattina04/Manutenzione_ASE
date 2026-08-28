@@ -34,7 +34,10 @@
                     <button type="submit" class="btn btn-primary btn-lg btn-block">Accedi</button>
                 </form>
 
-                <div class="login-hint">Accesso riservato al personale autorizzato.</div>
+                <div class="login-hint">
+                    Accesso per manutentori e amministratori.<br>
+                    <a href="{{ route('entra') }}" class="login-back">← Torna alla scelta del profilo</a>
+                </div>
             </div>
         </div>
     </div>

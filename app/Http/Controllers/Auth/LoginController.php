@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,33 @@ use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    /** Pagina iniziale: scelta del profilo (operatore / manutentore / admin). */
+    public function chooser(): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            return redirect()->route('richieste.index');
+        }
+
+        return view('auth.entra');
+    }
+
+    /** Accesso libero come operatore: entra senza username e password. */
+    public function enterAsOperatore(Request $request): RedirectResponse
+    {
+        $username = config('manutenzione.guest_operator_username', 'operatore');
+        $operatore = User::where('username', $username)->where('active', true)->first();
+
+        if (! $operatore) {
+            return redirect()->route('login')
+                ->withErrors(['username' => "Accesso operatore non disponibile: contatta l'amministratore."]);
+        }
+
+        Auth::login($operatore);
+        $request->session()->regenerate();
+
+        return redirect()->route('richieste.index');
+    }
+
     public function show(): View|RedirectResponse
     {
         if (Auth::check()) {
@@ -50,6 +78,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('entra');
     }
 }

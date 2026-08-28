@@ -74,7 +74,7 @@
     </div>
 @endif
 
-{{-- Eliminazione richiesta (admin sempre; operatore solo se ancora "aperta") --}}
+{{-- Eliminazione richiesta (solo amministratore) --}}
 @if($req->deletableBy($me))
     <div style="margin-top:18px; text-align:right">
         <form method="POST" action="{{ route('richieste.destroy', $req) }}"

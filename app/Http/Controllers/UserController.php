@@ -52,6 +52,12 @@ class UserController extends Controller
             $data['active'] = true;
         }
 
+        // L'account operatore ad accesso libero deve restare attivo e operatore.
+        if ($this->isGuestOperatore($user)) {
+            $data['role'] = 'operatore';
+            $data['active'] = true;
+        }
+
         $user->name = $data['name'];
         $user->role = $data['role'];
         $user->active = $request->boolean('active');
@@ -68,9 +74,18 @@ class UserController extends Controller
         if ($user->id === $request->user()->id) {
             return back()->withErrors(['user' => 'Non puoi disattivare il tuo stesso account.']);
         }
+        if ($this->isGuestOperatore($user) && $user->active) {
+            return back()->withErrors(['user' => "Non puoi disattivare l'account operatore ad accesso libero."]);
+        }
         $user->active = ! $user->active;
         $user->save();
 
         return back()->with('ok', $user->active ? 'Utente riattivato.' : 'Utente disattivato.');
+    }
+
+    /** L'account condiviso usato dall'accesso libero degli operatori. */
+    private function isGuestOperatore(User $user): bool
+    {
+        return $user->username === config('manutenzione.guest_operator_username', 'operatore');
     }
 }
