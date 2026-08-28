@@ -68,6 +68,9 @@ a { color: var(--gold-dark); text-decoration: none; }
 .usermenu-panel a:hover, .usermenu-panel button:hover { background: #f4f2ea; }
 .role-badge { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px;
   font-weight: 700; background: var(--gold-light); color: var(--gold-dark); }
+.reparto-bar { background: var(--gold-light); color: var(--gold-dark); font-size: 13px; font-weight: 600;
+  border-top: 1px solid #eadcae; padding: 7px 16px; text-align: center; }
+.reparto-bar strong { font-weight: 800; }
 
 /* Layout */
 .container { max-width: 1080px; margin: 0 auto; padding: 18px 16px 60px; }

@@ -72,8 +72,8 @@ Apri il browser su **http://SERVER:8000**
 
 Aprendo il sito si sceglie il profilo:
 
-- **Operatore** → entra **subito, senza username e password** (compila poi il
-  proprio nome nel modulo della richiesta).
+- **Operatore** → sceglie il **reparto** ed entra **senza username e password**
+  (compila poi il proprio nome nel modulo della richiesta).
 - **Manutentore / Amministratore** → accesso con **username e password**.
 
 Utenti creati al primo avvio:
@@ -117,14 +117,13 @@ docker compose up -d --build
    note, operatore) e può **allegare foto del problema**.
 3. Dalla lista **Richieste** segue lo stato **delle proprie** richieste.
 
-> **Privacy tra operatori:** ogni operatore vede solo le richieste aperte **dal
-> proprio dispositivo** (telefono/PC), non quelle degli altri operatori. Il
-> collegamento è un cookie permanente del dispositivo (durata ~2 anni) che
-> **resta anche dopo il logout**: uscendo e rientrando come operatore si
-> rivedono le proprie richieste. Vale sullo stesso dispositivo/browser (se si
-> cambia dispositivo o si cancellano i dati del browser, le richieste
-> precedenti non sono più collegate). Manutentori e amministratori vedono
-> invece **tutte** le richieste.
+> **Visibilità per reparto:** l'operatore all'accesso sceglie un **reparto** e
+> vede tutte le richieste aperte dagli operatori entrati con **quello stesso
+> reparto** (da qualunque dispositivo, anche dopo il logout: basta rientrare
+> scegliendo lo stesso reparto). Questo "reparto d'accesso" serve solo a
+> raggruppare la visibilità e **non è mostrato ai manutentori**: a loro appare
+> soltanto il reparto scelto nel modulo della richiesta. Manutentori e
+> amministratori vedono **tutte** le richieste.
 
 ### Manutentore
 1. Vede tutte le richieste ordinate per priorità (rosso/giallo/verde) e data.

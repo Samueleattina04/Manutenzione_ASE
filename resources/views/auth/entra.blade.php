@@ -21,18 +21,15 @@
                     <div class="inline-error">{{ $errors->first() }}</div>
                 @endif
 
-                {{-- Operatore: entra direttamente, senza credenziali --}}
-                <form method="POST" action="{{ route('entra.operatore') }}">
-                    @csrf
-                    <button type="submit" class="role-choice role-op">
-                        <span class="role-ic">👷</span>
-                        <span class="role-txt">
-                            <strong>Operatore</strong>
-                            <small>Entra subito, senza password</small>
-                        </span>
-                        <span class="role-arrow">→</span>
-                    </button>
-                </form>
+                {{-- Operatore: sceglie il reparto e poi entra, senza credenziali --}}
+                <a href="{{ route('entra.operatore.reparto') }}" class="role-choice role-op">
+                    <span class="role-ic">👷</span>
+                    <span class="role-txt">
+                        <strong>Operatore</strong>
+                        <small>Scegli il reparto ed entra, senza password</small>
+                    </span>
+                    <span class="role-arrow">→</span>
+                </a>
 
                 {{-- Manutentore / Amministratore: username e password --}}
                 <a href="{{ route('login') }}" class="role-choice">

@@ -22,9 +22,30 @@ class LoginController extends Controller
         return view('auth.entra');
     }
 
-    /** Accesso libero come operatore: entra senza username e password. */
+    /** Passo intermedio dell'accesso operatore: scelta del reparto. */
+    public function chooseReparto(): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            return redirect()->route('richieste.index');
+        }
+
+        return view('auth.reparto', ['reparti' => config('manutenzione.reparti')]);
+    }
+
+    /**
+     * Accesso libero come operatore: entra senza username e password dopo aver
+     * scelto il reparto. Il reparto raggruppa la visibilità delle richieste.
+     */
     public function enterAsOperatore(Request $request): RedirectResponse
     {
+        $reparti = config('manutenzione.reparti');
+        $data = $request->validate([
+            'reparto' => ['required', 'string', 'in:'.implode(',', $reparti)],
+        ], [
+            'reparto.required' => 'Seleziona il reparto.',
+            'reparto.in' => 'Reparto non valido.',
+        ]);
+
         $username = config('manutenzione.guest_operator_username', 'operatore');
         $operatore = User::where('username', $username)->where('active', true)->first();
 
@@ -35,6 +56,8 @@ class LoginController extends Controller
 
         Auth::login($operatore);
         $request->session()->regenerate();
+        // Reparto d'accesso: usato solo per filtrare la visibilità.
+        $request->session()->put('op_reparto', $data['reparto']);
 
         return redirect()->route('richieste.index');
     }

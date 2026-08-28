@@ -8,7 +8,7 @@
     <div class="empty">
         <div class="big">📭</div>
         @if(auth()->user()->isOperatore())
-            <div>Non hai ancora aperto richieste da questo dispositivo.<br>Tocca <strong>Nuova</strong> per crearne una.</div>
+            <div>Nessuna richiesta per il reparto <strong>{{ session('op_reparto') }}</strong>.<br>Tocca <strong>Nuova</strong> per crearne una.</div>
         @else
             <div>Nessuna richiesta trovata con questi filtri.</div>
         @endif
