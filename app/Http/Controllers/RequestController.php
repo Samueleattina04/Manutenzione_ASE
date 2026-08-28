@@ -8,8 +8,10 @@ use App\Models\RequestUpdate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class RequestController extends Controller
@@ -33,8 +35,13 @@ class RequestController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        // Assicura che il dispositivo dell'operatore abbia un token (cookie).
+        if ($request->user()->isOperatore()) {
+            $this->operatorDeviceToken($request);
+        }
+
         return view('requests.create');
     }
 
@@ -68,13 +75,13 @@ class RequestController extends Controller
         if ($data['impianto'] !== 'Altro') {
             $req->impianto_altro = null;
         }
-        $req->save();
-
         // L'operatore è anonimo (account condiviso): leghiamo la richiesta al
-        // suo dispositivo tramite la sessione, così vede solo le proprie.
+        // suo dispositivo tramite un cookie di lunga durata, così la rivede
+        // anche dopo il logout, senza account individuale.
         if ($request->user()->isOperatore()) {
-            $request->session()->push('op_requests', $req->id);
+            $req->device_token = $this->operatorDeviceToken($request);
         }
+        $req->save();
 
         $this->storePhotos($request, $req, 'problema');
 
@@ -219,7 +226,7 @@ class RequestController extends Controller
             // L'operatore vede solo le richieste aperte dal suo dispositivo.
             ->when(
                 $request->user()->isOperatore(),
-                fn ($q) => $q->whereIn('id', $this->operatorRequestIds($request) ?: [0])
+                fn ($q) => $q->where('device_token', $this->operatorDeviceToken($request))
             )
             ->when($f['status'] === 'attive', fn ($q) => $q->whereNotIn('status', ['risolta', 'chiusa']))
             ->when($f['status'] === 'chiuse', fn ($q) => $q->whereIn('status', ['risolta', 'chiusa']))
@@ -259,31 +266,45 @@ class RequestController extends Controller
     private function stats(Request $request): array
     {
         // Per gli operatori i conteggi sono limitati alle loro richieste.
-        $ids = $request->user()->isOperatore() ? ($this->operatorRequestIds($request) ?: [0]) : null;
-        $base = fn () => $ids === null
+        $token = $request->user()->isOperatore() ? $this->operatorDeviceToken($request) : null;
+        $base = fn () => $token === null
             ? MaintenanceRequest::query()
-            : MaintenanceRequest::whereIn('id', $ids);
+            : MaintenanceRequest::where('device_token', $token);
 
         return [
             'attive' => $base()->whereNotIn('status', ['risolta', 'chiusa'])->count(),
             'urgenti' => $base()->where('priorita', 'rosso')->whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'mie' => $ids === null
+            'mie' => $token === null
                 ? MaintenanceRequest::where('created_by', $request->user()->id)->count()
                 : $base()->count(),
         ];
     }
 
-    /** ID delle richieste create dal dispositivo dell'operatore (via sessione). */
-    private function operatorRequestIds(Request $request): array
+    /**
+     * Token permanente del dispositivo dell'operatore (cookie ~2 anni).
+     * Sopravvive al logout, così l'operatore ritrova sempre le sue richieste
+     * su questo dispositivo senza bisogno di username e password.
+     */
+    private function operatorDeviceToken(Request $request): string
     {
-        return array_values(array_unique(session('op_requests', [])));
+        if ($token = $request->attributes->get('op_device')) {
+            return $token;
+        }
+        $token = $request->cookie('op_device');
+        if (! $token) {
+            $token = (string) Str::uuid();
+            Cookie::queue('op_device', $token, 60 * 24 * 365 * 2); // ~2 anni
+        }
+        $request->attributes->set('op_device', $token);
+
+        return $token;
     }
 
     /** Blocca l'operatore che tenta di vedere una richiesta non sua. */
     private function guardOperatorAccess(Request $request, MaintenanceRequest $richiesta): void
     {
         if ($request->user()->isOperatore()
-            && ! in_array($richiesta->id, $this->operatorRequestIds($request), true)) {
+            && $richiesta->device_token !== $this->operatorDeviceToken($request)) {
             abort(404);
         }
     }

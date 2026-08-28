@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('maintenance_requests', function (Blueprint $table) {
+            // Identificativo del dispositivo dell'operatore (accesso libero):
+            // consente a chi apre una richiesta di rivederla anche dopo il
+            // logout, senza account individuale.
+            $table->string('device_token', 64)->nullable()->after('created_by');
+            $table->index('device_token');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('maintenance_requests', function (Blueprint $table) {
+            $table->dropIndex(['device_token']);
+            $table->dropColumn('device_token');
+        });
+    }
+};

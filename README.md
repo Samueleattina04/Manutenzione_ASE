@@ -118,10 +118,13 @@ docker compose up -d --build
 3. Dalla lista **Richieste** segue lo stato **delle proprie** richieste.
 
 > **Privacy tra operatori:** ogni operatore vede solo le richieste aperte **dal
-> proprio dispositivo** (telefono/PC), non quelle degli altri operatori. La
-> visibilità è legata alla sessione del browser: dura quanto `SESSION_LIFETIME`
-> (di default 30 giorni) e vale sullo stesso dispositivo/browser. Manutentori e
-> amministratori vedono invece **tutte** le richieste.
+> proprio dispositivo** (telefono/PC), non quelle degli altri operatori. Il
+> collegamento è un cookie permanente del dispositivo (durata ~2 anni) che
+> **resta anche dopo il logout**: uscendo e rientrando come operatore si
+> rivedono le proprie richieste. Vale sullo stesso dispositivo/browser (se si
+> cambia dispositivo o si cancellano i dati del browser, le richieste
+> precedenti non sono più collegate). Manutentori e amministratori vedono
+> invece **tutte** le richieste.
 
 ### Manutentore
 1. Vede tutte le richieste ordinate per priorità (rosso/giallo/verde) e data.
