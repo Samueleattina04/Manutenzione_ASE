@@ -73,4 +73,16 @@
         </form>
     </div>
 @endif
+
+{{-- Eliminazione richiesta (admin sempre; operatore solo se ancora "aperta") --}}
+@if($req->deletableBy($me))
+    <div style="margin-top:18px; text-align:right">
+        <form method="POST" action="{{ route('richieste.destroy', $req) }}"
+              data-confirm="Eliminare definitivamente la richiesta #{{ $req->id }}? L'operazione non è reversibile.">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger">🗑 Elimina richiesta</button>
+        </form>
+    </div>
+@endif
 @endsection

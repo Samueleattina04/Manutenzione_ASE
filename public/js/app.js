@@ -167,6 +167,16 @@
     startPolling(dettaglio, () => dettaglio.dataset.pollUrl, 15000);
   }
 
+  // ---- Confirm before submit (es. eliminazione) ---------------------------
+  document.querySelectorAll('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      if (!window.confirm(form.getAttribute('data-confirm'))) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  });
+
   // ---- Submit guard (avoid double submit) ---------------------------------
   document.querySelectorAll('form[data-guard]').forEach((form) => {
     form.addEventListener('submit', () => {

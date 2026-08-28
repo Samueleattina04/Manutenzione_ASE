@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class RequestController extends Controller
@@ -155,6 +156,23 @@ class RequestController extends Controller
         $richiesta->touch();
 
         return redirect()->route('richieste.show', $richiesta)->with('ok', 'Foto aggiunte.');
+    }
+
+    /** Elimina definitivamente una richiesta (con foto e cronologia). */
+    public function destroy(Request $request, MaintenanceRequest $richiesta): RedirectResponse
+    {
+        abort_unless($richiesta->deletableBy($request->user()), 403, 'Permesso negato');
+
+        // Rimuove i file fisici delle foto prima di cancellare i record.
+        $paths = $richiesta->attachments()->pluck('path')->all();
+        if ($paths) {
+            Storage::disk('local')->delete($paths);
+        }
+
+        // La cancellazione propaga a interventi e allegati (foreign key cascade).
+        $richiesta->delete();
+
+        return redirect()->route('richieste.index')->with('ok', 'Richiesta eliminata.');
     }
 
     // ---- helpers ---------------------------------------------------------

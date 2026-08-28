@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/richieste/{richiesta}', [RequestController::class, 'show'])->name('richieste.show');
     Route::get('/richieste/{richiesta}/cronologia', [RequestController::class, 'timelineFragment'])->name('richieste.cronologia');
     Route::post('/richieste/{richiesta}/foto', [RequestController::class, 'storeAttachment'])->name('richieste.foto');
+    Route::delete('/richieste/{richiesta}', [RequestController::class, 'destroy'])->name('richieste.destroy');
 
     // Azioni riservate ai manutentori/admin
     Route::middleware('role:manutentore,admin')->group(function () {
