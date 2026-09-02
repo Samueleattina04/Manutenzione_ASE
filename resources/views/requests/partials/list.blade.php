@@ -1,7 +1,14 @@
 <div class="stats">
     <div class="stat"><div class="n">{{ $stats['attive'] }}</div><div class="l">Richieste attive</div></div>
     <div class="stat alert"><div class="n">{{ $stats['urgenti'] }}</div><div class="l">Urgenti (rosso)</div></div>
-    <div class="stat"><div class="n">{{ $stats['mie'] }}</div><div class="l">Le mie richieste</div></div>
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('richieste.index', ['da_assegnare' => 1, 'status' => 'tutte']) }}"
+           class="stat {{ $stats['da_assegnare'] > 0 ? 'alert' : '' }}" style="text-decoration:none">
+            <div class="n">{{ $stats['da_assegnare'] }}</div><div class="l">Esterne da assegnare</div>
+        </a>
+    @else
+        <div class="stat"><div class="n">{{ $stats['mie'] }}</div><div class="l">Le mie richieste</div></div>
+    @endif
 </div>
 
 @if($requests->isEmpty())

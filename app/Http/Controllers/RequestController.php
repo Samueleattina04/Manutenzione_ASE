@@ -260,6 +260,8 @@ class RequestController extends Controller
             )
             ->when($f['priorita'] !== '', fn ($q) => $q->where('priorita', $f['priorita']))
             ->when($f['impianto'] !== '', fn ($q) => $q->where('impianto', $f['impianto']))
+            // Richieste esterne ancora da assegnare a un manutentore esterno.
+            ->when($f['da_assegnare'], fn ($q) => $q->where('destinatario', 'esterna')->whereNull('external_maintainer_id'))
             ->when($f['mine'], fn ($q) => $q->where('created_by', $request->user()->id))
             ->when($f['q'] !== '', function ($q) use ($f) {
                 $like = '%'.$f['q'].'%';
@@ -284,6 +286,7 @@ class RequestController extends Controller
             'impianto' => (string) $request->query('impianto', ''),
             'q' => trim((string) $request->query('q', '')),
             'mine' => $request->boolean('mine'),
+            'da_assegnare' => $request->boolean('da_assegnare'),
         ];
     }
 
@@ -299,6 +302,8 @@ class RequestController extends Controller
             'mie' => $scoped
                 ? $this->visibleQuery($request)->count()
                 : MaintenanceRequest::where('created_by', $request->user()->id)->count(),
+            'da_assegnare' => MaintenanceRequest::where('destinatario', 'esterna')
+                ->whereNull('external_maintainer_id')->count(),
         ];
     }
 

@@ -13,6 +13,7 @@
             <input type="hidden" name="status" value="{{ $filters['status'] }}">
             <input type="hidden" name="priorita" value="{{ $filters['priorita'] }}">
             @if($filters['mine'])<input type="hidden" name="mine" value="1">@endif
+            @if($filters['da_assegnare'])<input type="hidden" name="da_assegnare" value="1">@endif
             <input type="search" name="q" class="search" value="{{ $filters['q'] }}" placeholder="🔎 Cerca macchinario, reparto, operatore…">
             <select name="impianto" onchange="this.form.submit()">
                 <option value="">Tutti gli impianti</option>
@@ -21,6 +22,15 @@
                 @endforeach
             </select>
         </form>
+        @if(auth()->user()->isAdmin())
+            <a href="{{ $filters['da_assegnare']
+                    ? request()->fullUrlWithQuery(['da_assegnare' => null])
+                    : request()->fullUrlWithQuery(['da_assegnare' => 1, 'status' => 'tutte']) }}"
+               class="chip {{ $filters['da_assegnare'] ? 'active' : '' }}"
+               @if($filters['da_assegnare']) style="background:#c62828;border-color:#c62828;color:#fff" @endif>
+               🛠️ Da assegnare @if($stats['da_assegnare'] > 0)({{ $stats['da_assegnare'] }})@endif
+            </a>
+        @endif
         @unless(auth()->user()->isOperatore())
             <a href="{{ request()->fullUrlWithQuery(['mine' => $filters['mine'] ? null : 1]) }}"
                class="chip {{ $filters['mine'] ? 'active' : '' }}">👤 Le mie</a>
