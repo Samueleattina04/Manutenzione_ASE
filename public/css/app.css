@@ -89,6 +89,8 @@ a { color: var(--gold-dark); text-decoration: none; }
 .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
 .chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.date-filter { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.date-filter input[type="date"] { width: auto; padding: 8px 10px; font-size: 14px; }
 
 /* Cards / list */
 .cards { display: grid; gap: 12px; }

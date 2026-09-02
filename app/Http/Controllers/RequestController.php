@@ -262,6 +262,9 @@ class RequestController extends Controller
             ->when($f['impianto'] !== '', fn ($q) => $q->where('impianto', $f['impianto']))
             // Richieste esterne ancora da assegnare a un manutentore esterno.
             ->when($f['da_assegnare'], fn ($q) => $q->where('destinatario', 'esterna')->whereNull('external_maintainer_id'))
+            // Filtro per data di apertura (dal / al inclusi).
+            ->when($f['dal'], fn ($q) => $q->whereDate('created_at', '>=', $f['dal']))
+            ->when($f['al'], fn ($q) => $q->whereDate('created_at', '<=', $f['al']))
             ->when($f['mine'], fn ($q) => $q->where('created_by', $request->user()->id))
             ->when($f['q'] !== '', function ($q) use ($f) {
                 $like = '%'.$f['q'].'%';
@@ -287,7 +290,18 @@ class RequestController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'mine' => $request->boolean('mine'),
             'da_assegnare' => $request->boolean('da_assegnare'),
+            'dal' => $this->validDate($request->query('dal')),
+            'al' => $this->validDate($request->query('al')),
         ];
+    }
+
+    /** Restituisce la data solo se in formato valido (Y-m-d), altrimenti ''. */
+    private function validDate($value): string
+    {
+        $value = (string) $value;
+        $d = \DateTime::createFromFormat('Y-m-d', $value);
+
+        return ($d && $d->format('Y-m-d') === $value) ? $value : '';
     }
 
     private function stats(Request $request): array

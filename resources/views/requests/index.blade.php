@@ -21,7 +21,14 @@
                     <option value="{{ $imp }}" @selected($filters['impianto'] === $imp)>{{ $imp }}</option>
                 @endforeach
             </select>
+            @unless(auth()->user()->isOperatore())
+                <label class="date-filter">Dal <input type="date" name="dal" value="{{ $filters['dal'] }}" onchange="this.form.submit()"></label>
+                <label class="date-filter">Al <input type="date" name="al" value="{{ $filters['al'] }}" onchange="this.form.submit()"></label>
+            @endunless
         </form>
+        @if($filters['dal'] || $filters['al'] || $filters['q'])
+            <a href="{{ request()->fullUrlWithQuery(['dal' => null, 'al' => null, 'q' => null]) }}" class="chip">✕ Azzera</a>
+        @endif
         @if(auth()->user()->isAdmin())
             <a href="{{ $filters['da_assegnare']
                     ? request()->fullUrlWithQuery(['da_assegnare' => null])
