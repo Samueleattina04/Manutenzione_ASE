@@ -40,15 +40,18 @@
   wireRadioGroup('.status-opt', '.status-picker', 'sel');
 
   // ---- "Altro" impianto reveal --------------------------------------------
-  function handleAltro() {
+  const impSelect = document.querySelector('select[name=impianto]');
+  function handleAltro(focus = false) {
     const altro = document.querySelector('[data-altro-input]');
     if (!altro) return;
     const checked = document.querySelector('input[name=impianto]:checked');
-    const show = checked && checked.value === 'Altro';
+    const val = impSelect ? impSelect.value : (checked ? checked.value : '');
+    const show = val === 'Altro';
     altro.style.display = show ? 'block' : 'none';
     const inp = altro.querySelector('input');
-    if (inp) { inp.required = !!show; if (show) inp.focus(); }
+    if (inp) { inp.required = !!show; if (show && focus) inp.focus(); }
   }
+  if (impSelect) impSelect.addEventListener('change', () => handleAltro(true));
   handleAltro();
 
   // ---- Image compression + preview for file inputs ------------------------

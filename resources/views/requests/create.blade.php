@@ -22,18 +22,15 @@
         {{-- Impianto --}}
         <div class="field">
             <label>Scegli l’impianto <span class="req">*</span></label>
-            <div class="radio-list">
+            <select name="impianto" data-impianto required>
+                <option value="" disabled @selected(! old('impianto'))>Scegli l’impianto…</option>
                 @foreach($impianti as $imp)
-                    <label class="radio-item {{ old('impianto') === $imp ? 'checked' : '' }}">
-                        <input type="radio" name="impianto" value="{{ $imp }}" @checked(old('impianto') === $imp)> {{ $imp }}
-                    </label>
+                    <option value="{{ $imp }}" @selected(old('impianto') === $imp)>{{ $imp }}</option>
                 @endforeach
-                <label class="radio-item {{ old('impianto') === 'Altro' ? 'checked' : '' }}">
-                    <input type="radio" name="impianto" value="Altro" @checked(old('impianto') === 'Altro')> Altro
-                </label>
-                <div data-altro-input style="display:{{ old('impianto') === 'Altro' ? 'block' : 'none' }}">
-                    <input type="text" name="impianto_altro" class="radio-altro-input" value="{{ old('impianto_altro') }}" placeholder="Specifica impianto">
-                </div>
+                <option value="Altro" @selected(old('impianto') === 'Altro')>Altro</option>
+            </select>
+            <div data-altro-input style="display:{{ old('impianto') === 'Altro' ? 'block' : 'none' }}; margin-top:8px">
+                <input type="text" name="impianto_altro" value="{{ old('impianto_altro') }}" placeholder="Specifica impianto">
             </div>
             @error('impianto')<div class="field-error">{{ $message }}</div>@enderror
             @error('impianto_altro')<div class="field-error">{{ $message }}</div>@enderror

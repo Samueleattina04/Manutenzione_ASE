@@ -4,7 +4,16 @@
 // originale "Richiesta Manutenzione".
 
 return [
-    'impianti' => ['Pisti', 'Vincente', 'Madero 01', 'Madero 104'],
+    'impianti' => [
+        'Dolciario Pisti',
+        'Dolciario Vincente',
+        'Dolciario Creme',
+        'Dolciario Biscotti',
+        'Dolciario Lievitati',
+        'Dolciario Cioccolateria',
+        'Frutta Secca 01',
+        'Frutta Secca 104',
+    ],
 
     'reparti' => [
         'Madero Produzione',
