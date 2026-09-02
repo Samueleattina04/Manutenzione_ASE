@@ -17,13 +17,14 @@
 <div class="table-wrap">
     <table class="users">
         <thead>
-            <tr><th>Nome</th><th>Username</th><th>Ruolo</th><th>Stato</th><th>Azioni</th></tr>
+            <tr><th>Nome</th><th>Username</th><th>Email</th><th>Ruolo</th><th>Stato</th><th>Azioni</th></tr>
         </thead>
         <tbody>
             @foreach($users as $user)
                 <tr>
                     <td><strong>{{ $user->name }}</strong></td>
                     <td>{{ $user->username }}</td>
+                    <td>{{ $user->email ?: '—' }}</td>
                     <td><span class="role-badge">{{ $ruoliLabel[$user->role] ?? $user->role }}</span></td>
                     <td>
                         @if($user->active)<span class="pill-on">Attivo</span>
@@ -52,6 +53,7 @@
             @csrf
             <div class="field"><label>Nome e cognome <span class="req">*</span></label><input type="text" name="name" required></div>
             <div class="field"><label>Username <span class="req">*</span></label><input type="text" name="username" required></div>
+            <div class="field"><label>Email</label><input type="email" name="email" placeholder="Per i manutentori esterni: riceveranno le richieste via email"></div>
             <div class="field"><label>Ruolo <span class="req">*</span></label>
                 <select name="role">@foreach($roles as $r)<option value="{{ $r }}">{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach</select>
             </div>
@@ -74,6 +76,7 @@
                 @method('PUT')
                 <div class="field"><label>Nome e cognome <span class="req">*</span></label><input type="text" name="name" value="{{ $user->name }}" required></div>
                 <div class="field"><label>Username</label><input type="text" value="{{ $user->username }}" disabled></div>
+                <div class="field"><label>Email</label><input type="email" name="email" value="{{ $user->email }}" placeholder="Per i manutentori esterni"></div>
                 <div class="field"><label>Ruolo <span class="req">*</span></label>
                     <select name="role" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
                         @foreach($roles as $r)<option value="{{ $r }}" @selected($user->role === $r)>{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach

@@ -22,6 +22,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::in(array_keys(config('manutenzione.ruoli')))],
             'password' => ['required', 'string', 'min:6'],
         ]);
@@ -29,6 +30,7 @@ class UserController extends Controller
         User::create([
             'name' => $data['name'],
             'username' => $data['username'],
+            'email' => $data['email'] ?: null,
             'role' => $data['role'],
             'password' => $data['password'], // hashed via cast
             'active' => true,
@@ -41,6 +43,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(array_keys(config('manutenzione.ruoli')))],
             'active' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:6'],
@@ -59,6 +62,7 @@ class UserController extends Controller
         }
 
         $user->name = $data['name'];
+        $user->email = $data['email'] ?: null;
         $user->role = $data['role'];
         $user->active = $request->boolean('active');
         if (! empty($data['password'])) {

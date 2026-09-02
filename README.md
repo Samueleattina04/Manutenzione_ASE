@@ -148,6 +148,13 @@ o *esterna*.
   vede e gestisce **solo** le richieste esterne assegnate a lui: un esterno che
   ripara i muletti non vede le richieste destinate a un altro esterno.
 - Manutentori interni e amministratori vedono tutte le richieste.
+- **Notifica email:** se al manutentore esterno è associata un'email (in
+  *Utenti*), all'assegnazione parte in automatico un'**email di riepilogo**
+  della richiesta. Utile perché gli esterni non accedono da remoto: ricevono
+  l'avviso e, quando sono in azienda, entrano nell'applicativo per registrare
+  l'intervento. Per l'invio reale configura l'SMTP aziendale nel `.env`
+  (`MAIL_MAILER=smtp`, `MAIL_HOST`, ecc. — vedi `.env.example`). Con
+  `MAIL_MAILER=log` le email vengono solo scritte nei log, non inviate.
 
 ---
 

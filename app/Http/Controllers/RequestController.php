@@ -8,7 +8,9 @@ use App\Models\RequestUpdate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Mail\RichiestaEsternaAssegnata;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -423,10 +425,30 @@ class RequestController extends Controller
             'external_maintainer_id.exists' => 'Manutentore esterno non valido.',
         ]);
 
+        $precedente = $richiesta->external_maintainer_id;
         $richiesta->external_maintainer_id = $data['external_maintainer_id'];
         $richiesta->save();
 
-        return redirect()->route('richieste.show', $richiesta)
-            ->with('ok', 'Manutentore esterno assegnato.');
+        // Notifica via email al manutentore esterno (solo se è cambiato).
+        $redirect = redirect()->route('richieste.show', $richiesta);
+        if ($richiesta->external_maintainer_id !== $precedente) {
+            $mx = $richiesta->externalMaintainer()->first();
+            if ($mx && $mx->email) {
+                try {
+                    Mail::to($mx->email)->send(new RichiestaEsternaAssegnata($richiesta, $mx->name));
+                    return $redirect->with('ok', 'Manutentore esterno assegnato. Email di notifica inviata a '.$mx->email.'.');
+                } catch (\Throwable $e) {
+                    report($e);
+
+                    return $redirect->with('ok', 'Manutentore esterno assegnato.')
+                        ->with('warn', "Assegnazione riuscita, ma l'email di notifica non è stata inviata: verifica la configurazione email del server.");
+                }
+            }
+
+            return $redirect->with('ok', 'Manutentore esterno assegnato.')
+                ->with('warn', 'Questo manutentore non ha un\'email configurata: aggiungila in Utenti per inviare la notifica.');
+        }
+
+        return $redirect->with('ok', 'Manutentore esterno assegnato.');
     }
 }

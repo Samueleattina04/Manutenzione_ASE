@@ -59,6 +59,9 @@
         @if(session('ok'))
             <div class="flash ok">{{ session('ok') }}</div>
         @endif
+        @if(session('warn'))
+            <div class="flash warn">{{ session('warn') }}</div>
+        @endif
         @yield('content')
     </main>
 
