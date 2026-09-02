@@ -10,7 +10,8 @@
                 <p style="margin:0 0 18px; color:#5b6672;">Numero richiesta: <strong>#{{ $richiesta->id }}</strong></p>
 
                 <p style="margin:0 0 16px;">Ciao {{ $manutentoreNome }},<br>
-                    ti è stata assegnata una richiesta di <strong>manutenzione esterna</strong>. Di seguito il riepilogo.</p>
+                    ti è stata assegnata una richiesta di <strong>manutenzione esterna</strong> da
+                    <strong>{{ config('manutenzione.azienda') }}</strong>. Di seguito il riepilogo.</p>
 
                 <table cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
                     @php
@@ -49,7 +50,7 @@
             </div>
         </div>
         <p style="text-align:center; color:#98917f; font-size:12px; margin:16px 0 0;">
-            Manutenzione ASE · email automatica, non rispondere a questo messaggio.
+            {{ config('manutenzione.azienda') }} · email automatica, non rispondere a questo messaggio.
         </p>
     </div>
 </body>

@@ -4,6 +4,9 @@
 // originale "Richiesta Manutenzione".
 
 return [
+    // Nome dell'azienda (usato ad es. nelle email ai manutentori esterni).
+    'azienda' => 'Antichi Sapori Dell\'Etna S.r.l',
+
     'impianti' => [
         'Dolciario Pisti',
         'Dolciario Vincente',
