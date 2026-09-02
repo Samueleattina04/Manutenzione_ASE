@@ -81,6 +81,8 @@
                 <label>Nuovo stato</label>
                 <div class="status-picker">
                     @foreach(config('manutenzione.stati_manutentore') as $val)
+                        {{-- "Presa in carico" è gestita dal pulsante dedicato qui sopra --}}
+                        @continue($val === 'presa_in_carico')
                         @php($s = config('manutenzione.stati.'.$val))
                         <label class="status-opt">
                             <input type="radio" name="status" value="{{ $val }}">
