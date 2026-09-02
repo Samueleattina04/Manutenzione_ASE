@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [RequestController::class, 'index'])->name('richieste.index');
     Route::get('/richieste-elenco', [RequestController::class, 'listFragment'])->name('richieste.elenco');
     Route::get('/richieste/nuova', [RequestController::class, 'create'])->name('richieste.create');
+    Route::get('/richieste/esporta', [RequestController::class, 'export'])->name('richieste.export');
     Route::post('/richieste', [RequestController::class, 'store'])->name('richieste.store');
     Route::get('/richieste/{richiesta}', [RequestController::class, 'show'])->name('richieste.show');
     Route::get('/richieste/{richiesta}/cronologia', [RequestController::class, 'timelineFragment'])->name('richieste.cronologia');

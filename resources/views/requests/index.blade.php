@@ -29,6 +29,9 @@
         @if($filters['dal'] || $filters['al'] || $filters['q'])
             <a href="{{ request()->fullUrlWithQuery(['dal' => null, 'al' => null, 'q' => null]) }}" class="chip">✕ Azzera</a>
         @endif
+        @unless(auth()->user()->isOperatore())
+            <a href="{{ route('richieste.export', request()->query()) }}" class="btn btn-ghost btn-sm">⬇️ Esporta Excel</a>
+        @endunless
         @if(auth()->user()->isAdmin())
             <a href="{{ $filters['da_assegnare']
                     ? request()->fullUrlWithQuery(['da_assegnare' => null])

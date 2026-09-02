@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RequestController extends Controller
 {
@@ -37,6 +38,68 @@ class RequestController extends Controller
     public function create(): View
     {
         return view('requests.create');
+    }
+
+    /** Esporta in CSV (apribile in Excel) le richieste secondo i filtri correnti. */
+    public function export(Request $request): StreamedResponse
+    {
+        $rows = $this->filtered($request)
+            ->with(['externalMaintainer', 'updates.user'])
+            ->reorder('created_at', 'desc')
+            ->get();
+
+        $filename = 'richieste_manutenzione_'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 per Excel
+
+            fputcsv($out, [
+                'N.', 'Data apertura', 'Impianto', 'Macchinario', 'Reparto', 'Destinatario',
+                'Priorità', 'Stato', 'Operatore', 'Manutentore', 'Manutentore esterno',
+                'Presa in carico', 'Risolta il', 'Tempo risoluzione',
+                'Descrizione evento', 'Note', 'Interventi',
+            ], ';');
+
+            foreach ($rows as $r) {
+                $interventi = $r->updates->map(function ($u) {
+                    $stato = $u->status ? config('manutenzione.stati.'.$u->status.'.label', $u->status) : '';
+                    $line = trim(($u->created_at?->format('d/m/Y H:i') ?? '').' '.($u->user?->name ?? ''));
+                    if ($stato) {
+                        $line .= ' ['.$stato.']';
+                    }
+                    if ($u->note) {
+                        $line .= ': '.$u->note;
+                    }
+
+                    return $line;
+                })->implode("\n");
+
+                fputcsv($out, [
+                    $r->id,
+                    $r->created_at?->format('d/m/Y H:i'),
+                    $r->impiantoLabel(),
+                    $r->macchinario,
+                    $r->reparto,
+                    $r->destinatarioLabel(),
+                    config('manutenzione.priorita.'.$r->priorita.'.short', $r->priorita),
+                    config('manutenzione.stati.'.$r->status.'.label', $r->status),
+                    $r->operatore,
+                    $r->assignee?->name,
+                    $r->externalMaintainer?->name,
+                    $r->taken_at?->format('d/m/Y H:i'),
+                    $r->resolved_at?->format('d/m/Y H:i'),
+                    $r->resolutionDuration(),
+                    $r->descrizione,
+                    $r->note,
+                    $interventi,
+                ], ';');
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
