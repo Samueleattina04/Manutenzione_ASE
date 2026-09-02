@@ -31,9 +31,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/richieste/{richiesta}/foto', [RequestController::class, 'storeAttachment'])->name('richieste.foto');
     Route::delete('/richieste/{richiesta}', [RequestController::class, 'destroy'])->name('richieste.destroy');
 
-    // Azioni riservate ai manutentori/admin
-    Route::middleware('role:manutentore,admin')->group(function () {
+    // Azioni riservate ai manutentori (interni/esterni) e admin
+    Route::middleware('role:manutentore,manutentore_esterno,admin')->group(function () {
         Route::post('/richieste/{richiesta}/aggiornamenti', [RequestController::class, 'storeUpdate'])->name('richieste.aggiorna');
+    });
+
+    // Assegnazione del manutentore esterno (solo admin)
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/richieste/{richiesta}/assegna-esterno', [RequestController::class, 'assignExternal'])->name('richieste.assegna-esterno');
     });
 
     // Allegati (immagini protette da login)

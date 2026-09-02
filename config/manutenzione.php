@@ -34,6 +34,21 @@ return [
         'Esterno',
     ],
 
+    // Destinatario della richiesta.
+    'destinatari' => [
+        'interna' => 'Manutenzione interna',
+        'straordinaria' => 'Manutenzione straordinaria',
+        'esterna' => 'Manutenzione esterna',
+    ],
+
+    // Etichette leggibili dei ruoli.
+    'ruoli' => [
+        'operatore' => 'Operatore',
+        'manutentore' => 'Manutentore',
+        'manutentore_esterno' => 'Manutentore esterno',
+        'admin' => 'Amministratore',
+    ],
+
     // Account condiviso usato dall'accesso libero degli operatori (senza password).
     'guest_operator_username' => 'operatore',
 

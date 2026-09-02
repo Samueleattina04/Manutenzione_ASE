@@ -32,6 +32,12 @@
                 <div class="rcard-badges">
                     <x-priorita-badge :value="$r->priorita" />
                     <x-stato-badge :value="$r->status" />
+                    @if($r->isEsterna())
+                        <span class="badge" style="background:#6d4c41">Esterna</span>
+                        @if($r->esternaDaAssegnare())
+                            <span class="badge" style="background:#c62828">Da assegnare</span>
+                        @endif
+                    @endif
                 </div>
             </a>
         @endforeach

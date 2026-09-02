@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'impianto', 'impianto_altro', 'macchinario', 'reparto', 'descrizione',
-    'priorita', 'note', 'operatore', 'status', 'created_by', 'assigned_to',
-    'taken_at', 'resolved_at',
+    'priorita', 'destinatario', 'note', 'operatore', 'status', 'created_by',
+    'assigned_to', 'external_maintainer_id', 'taken_at', 'resolved_at',
 ])]
 class MaintenanceRequest extends Model
 {
@@ -30,6 +30,11 @@ class MaintenanceRequest extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function externalMaintainer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'external_maintainer_id');
     }
 
     public function updates(): HasMany
@@ -86,6 +91,22 @@ class MaintenanceRequest extends Model
         }
 
         return $parts ? implode(' ', $parts) : '<1min';
+    }
+
+    public function destinatarioLabel(): string
+    {
+        return config('manutenzione.destinatari.'.$this->destinatario, $this->destinatario);
+    }
+
+    public function isEsterna(): bool
+    {
+        return $this->destinatario === 'esterna';
+    }
+
+    /** Richiesta esterna in attesa di assegnazione al manutentore esterno. */
+    public function esternaDaAssegnare(): bool
+    {
+        return $this->isEsterna() && ! $this->external_maintainer_id;
     }
 
     /** Etichetta leggibile per l'impianto (gestisce "Altro"). */

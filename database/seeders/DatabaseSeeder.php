@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Amministratore', 'username' => 'admin', 'password' => 'admin123', 'role' => 'admin'],
             ['name' => 'Operatore', 'username' => 'operatore', 'password' => 'operatore123', 'role' => 'operatore'],
             ['name' => 'Manutentore Demo', 'username' => 'manutentore', 'password' => 'manutentore123', 'role' => 'manutentore'],
+            ['name' => 'Manutentore Esterno Demo', 'username' => 'esterno', 'password' => 'esterno123', 'role' => 'manutentore_esterno'],
         ];
 
         foreach ($defaults as $u) {

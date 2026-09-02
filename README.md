@@ -82,6 +82,7 @@ Utenti creati al primo avvio:
 |---|---|---|
 | Amministratore | `admin` | `admin123` |
 | Manutentore | `manutentore` | `manutentore123` |
+| Manutentore esterno (demo) | `esterno` | `esterno123` |
 | Operatore (accesso libero) | `operatore` | *(non serve: entra dal pulsante “Operatore”)* |
 
 > ⚠️ **Cambia subito le password** dopo il primo accesso (menu in alto a destra →
@@ -134,6 +135,19 @@ docker compose up -d --build
 ### Amministratore
 - Tutto quello che fa il manutentore, più la sezione **Utenti** per creare,
   modificare, disattivare gli account e reimpostare le password.
+- Assegna il **manutentore esterno** alle richieste con destinatario
+  *Manutenzione esterna* (dal dettaglio della richiesta).
+
+### Destinatario e manutentori esterni
+Ogni richiesta ha un **destinatario**: *Manutenzione interna*, *straordinaria*
+o *esterna*.
+
+- Le richieste **esterne** vengono instradate dall'amministratore al
+  **manutentore esterno** corretto (dal dettaglio → *Manutentore esterno*).
+- Ogni **manutentore esterno** (ruolo con login, creato dall'admin in *Utenti*)
+  vede e gestisce **solo** le richieste esterne assegnate a lui: un esterno che
+  ripara i muletti non vede le richieste destinate a un altro esterno.
+- Manutentori interni e amministratori vedono tutte le richieste.
 
 ---
 

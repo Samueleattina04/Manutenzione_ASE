@@ -10,6 +10,12 @@
     <div class="dl"><dt>Impianto</dt><dd>{{ $req->impiantoLabel() }}</dd></div>
     <div class="dl"><dt>Reparto</dt><dd>{{ $req->reparto ?: '—' }}</dd></div>
     <div class="dl"><dt>Priorità</dt><dd>{{ config('manutenzione.priorita.'.$req->priorita.'.label', $req->priorita) }}</dd></div>
+    <div class="dl"><dt>Destinatario</dt><dd>{{ $req->destinatarioLabel() }}</dd></div>
+    @if($req->isEsterna())
+        <div class="dl"><dt>Manutentore esterno</dt>
+            <dd>{{ $req->externalMaintainer?->name ?? '⚠️ Da assegnare' }}</dd>
+        </div>
+    @endif
     @if($req->descrizione)
         <div class="dl full"><dt>Descrizione evento</dt><dd>{{ $req->descrizione }}</dd></div>
     @endif

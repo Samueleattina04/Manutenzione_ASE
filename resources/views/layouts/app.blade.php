@@ -20,7 +20,9 @@
             </a>
             <nav class="nav">
                 <a href="{{ route('richieste.index') }}" class="{{ request()->routeIs('richieste.index') ? 'active' : '' }}">Richieste</a>
-                <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}">Nuova</a>
+                @unless($u->isManutentoreEsterno())
+                    <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}">Nuova</a>
+                @endunless
                 @if($u->isAdmin())
                     <a href="{{ route('utenti.index') }}" class="{{ request()->routeIs('utenti.index') ? 'active' : '' }}">Utenti</a>
                 @endif
@@ -34,7 +36,7 @@
                 <div class="usermenu-panel" data-usermenu-panel hidden>
                     <div class="uinfo">
                         <strong>{{ $u->name }}</strong>
-                        <span class="role-badge">{{ $u->role }}</span>
+                        <span class="role-badge">{{ $u->roleLabel() }}</span>
                     </div>
                     @unless($u->isOperatore())
                         <a href="{{ route('profilo.password') }}">🔑 Cambia password</a>
@@ -62,7 +64,9 @@
 @auth
     <nav class="mobile-nav">
         <a href="{{ route('richieste.index') }}" class="{{ request()->routeIs('richieste.index') ? 'active' : '' }}"><span class="ic">📋</span>Richieste</a>
-        <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}"><span class="ic">➕</span>Nuova</a>
+        @unless($u->isManutentoreEsterno())
+            <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}"><span class="ic">➕</span>Nuova</a>
+        @endunless
         @if($u->isAdmin())
             <a href="{{ route('utenti.index') }}" class="{{ request()->routeIs('utenti.index') ? 'active' : '' }}"><span class="ic">👥</span>Utenti</a>
         @endif

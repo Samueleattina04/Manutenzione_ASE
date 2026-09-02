@@ -19,6 +19,37 @@
     </div>
 </div>
 
+{{-- Admin: assegnazione del manutentore esterno (richieste "manutenzione esterna") --}}
+@if($me->isAdmin() && $req->isEsterna())
+    <div class="action-card">
+        <div class="block-title" style="margin-top:0">🛠️ Manutentore esterno</div>
+        @if($manutentoriEsterni->isEmpty())
+            <div class="muted" style="font-size:14px">
+                Nessun manutentore esterno configurato. Creane uno dalla sezione
+                <a href="{{ route('utenti.index') }}">Utenti</a> (ruolo “Manutentore esterno”).
+            </div>
+        @else
+            <form method="POST" action="{{ route('richieste.assegna-esterno', $req) }}" data-guard
+                  style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+                @csrf
+                <div class="field mb0" style="flex:1; min-width:200px">
+                    <label>Assegna a</label>
+                    <select name="external_maintainer_id" required>
+                        <option value="" disabled @selected(! $req->external_maintainer_id)>Scegli il manutentore esterno…</option>
+                        @foreach($manutentoriEsterni as $mx)
+                            <option value="{{ $mx->id }}" @selected($req->external_maintainer_id === $mx->id)>{{ $mx->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">{{ $req->external_maintainer_id ? 'Riassegna' : 'Assegna' }}</button>
+            </form>
+            @if($req->esternaDaAssegnare())
+                <div class="field-error mt8">Questa richiesta esterna non è ancora stata assegnata a un manutentore.</div>
+            @endif
+        @endif
+    </div>
+@endif
+
 {{-- Operatore/admin: aggiungi foto del problema (finché la richiesta è aperta) --}}
 @if(($req->created_by === $me->id || $me->isAdmin()) && ! $req->isDone())
     <div class="action-card">

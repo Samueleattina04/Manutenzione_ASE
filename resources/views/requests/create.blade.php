@@ -54,6 +54,18 @@
             </select>
         </div>
 
+        {{-- Destinatario --}}
+        <div class="field">
+            <label>Destinatario <span class="req">*</span></label>
+            <select name="destinatario" required>
+                @foreach(config('manutenzione.destinatari') as $val => $label)
+                    <option value="{{ $val }}" @selected(old('destinatario', 'interna') === $val)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <div class="hint">Per la manutenzione esterna sarà l’amministratore ad assegnare il manutentore esterno.</div>
+            @error('destinatario')<div class="field-error">{{ $message }}</div>@enderror
+        </div>
+
         {{-- Descrizione --}}
         <div class="field">
             <label>Descrizione evento</label>

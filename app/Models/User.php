@@ -39,10 +39,20 @@ class User extends Authenticatable
         return $this->role === 'operatore';
     }
 
+    public function isManutentoreEsterno(): bool
+    {
+        return $this->role === 'manutentore_esterno';
+    }
+
     /** Può prendere in carico e aggiornare le richieste. */
     public function canManutentore(): bool
     {
-        return in_array($this->role, ['manutentore', 'admin'], true);
+        return in_array($this->role, ['manutentore', 'manutentore_esterno', 'admin'], true);
+    }
+
+    public function roleLabel(): string
+    {
+        return config('manutenzione.ruoli.'.$this->role, $this->role);
     }
 
     public function createdRequests(): HasMany

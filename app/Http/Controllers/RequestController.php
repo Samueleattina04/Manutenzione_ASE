@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RequestController extends Controller
@@ -44,11 +45,14 @@ class RequestController extends Controller
         $reparti = config('manutenzione.reparti');
         $priorita = array_keys(config('manutenzione.priorita'));
 
+        $destinatari = array_keys(config('manutenzione.destinatari'));
+
         $data = $request->validate([
             'impianto' => ['required', 'string', 'in:'.implode(',', array_merge($impianti, ['Altro']))],
             'impianto_altro' => ['nullable', 'string', 'max:255', 'required_if:impianto,Altro'],
             'macchinario' => ['required', 'string', 'max:255'],
             'reparto' => ['nullable', 'string', 'in:'.implode(',', $reparti)],
+            'destinatario' => ['required', 'string', 'in:'.implode(',', $destinatari)],
             'descrizione' => ['nullable', 'string'],
             'priorita' => ['required', 'string', 'in:'.implode(',', $priorita)],
             'note' => ['nullable', 'string'],
@@ -59,6 +63,7 @@ class RequestController extends Controller
             'impianto.required' => "Scegli l'impianto.",
             'impianto_altro.required_if' => "Specifica l'impianto (campo Altro).",
             'macchinario.required' => "Inserisci l'impianto o macchinario in questione.",
+            'destinatario.required' => 'Scegli il destinatario.',
             'operatore.required' => 'Il campo Operatore è obbligatorio.',
         ]);
 
@@ -85,23 +90,32 @@ class RequestController extends Controller
 
     public function show(Request $request, MaintenanceRequest $richiesta): View
     {
-        $this->guardOperatorAccess($request, $richiesta);
+        $this->guardAccess($request, $richiesta);
 
         $richiesta->load([
-            'creator', 'assignee',
+            'creator', 'assignee', 'externalMaintainer',
             'updates.user', 'updates.attachments',
             'attachments',
         ]);
 
-        return view('requests.show', ['req' => $richiesta]);
+        // Elenco manutentori esterni (per l'assegnazione lato admin).
+        $manutentoriEsterni = ($request->user()->isAdmin() && $richiesta->isEsterna())
+            ? \App\Models\User::where('role', 'manutentore_esterno')->where('active', true)
+                ->orderBy('name')->get()
+            : collect();
+
+        return view('requests.show', [
+            'req' => $richiesta,
+            'manutentoriEsterni' => $manutentoriEsterni,
+        ]);
     }
 
     /** Frammento della cronologia (aggiornamento automatico del dettaglio). */
     public function timelineFragment(Request $request, MaintenanceRequest $richiesta): View
     {
-        $this->guardOperatorAccess($request, $richiesta);
+        $this->guardAccess($request, $richiesta);
 
-        $richiesta->load(['creator', 'assignee', 'updates.user', 'updates.attachments', 'attachments']);
+        $richiesta->load(['creator', 'assignee', 'externalMaintainer', 'updates.user', 'updates.attachments', 'attachments']);
 
         return view('requests.partials.detail_body', ['req' => $richiesta]);
     }
@@ -109,6 +123,8 @@ class RequestController extends Controller
     /** Aggiornamento di stato / intervento (solo manutentore/admin). */
     public function storeUpdate(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
+        $this->guardAccess($request, $richiesta);
+
         $statiValidi = config('manutenzione.stati_manutentore');
 
         $data = $request->validate([
@@ -156,7 +172,7 @@ class RequestController extends Controller
     /** Aggiunta foto a una richiesta esistente. */
     public function storeAttachment(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
-        $this->guardOperatorAccess($request, $richiesta);
+        $this->guardAccess($request, $richiesta);
 
         $request->validate([
             'foto' => ['required', 'array', 'max:8'],
@@ -209,18 +225,33 @@ class RequestController extends Controller
         }
     }
 
-    private function filtered(Request $request): Builder
+    /**
+     * Query di base con la VISIBILITÀ per ruolo già applicata:
+     * - operatore: solo le richieste del reparto scelto all'accesso;
+     * - manutentore esterno: solo le richieste esterne assegnate a lui;
+     * - manutentore interno / admin: tutte.
+     */
+    private function visibleQuery(Request $request): Builder
     {
-        $f = $this->filterValues($request);
-
         return MaintenanceRequest::query()
-            ->with('assignee')
-            ->withCount('attachments')
-            // L'operatore vede solo le richieste del reparto scelto all'accesso.
             ->when(
                 $request->user()->isOperatore(),
                 fn ($q) => $q->where('reparto_accesso', $this->operatorReparto($request))
             )
+            ->when(
+                $request->user()->isManutentoreEsterno(),
+                fn ($q) => $q->where('destinatario', 'esterna')
+                    ->where('external_maintainer_id', $request->user()->id)
+            );
+    }
+
+    private function filtered(Request $request): Builder
+    {
+        $f = $this->filterValues($request);
+
+        return $this->visibleQuery($request)
+            ->with('assignee')
+            ->withCount('attachments')
             ->when($f['status'] === 'attive', fn ($q) => $q->whereNotIn('status', ['risolta', 'chiusa']))
             ->when($f['status'] === 'chiuse', fn ($q) => $q->whereIn('status', ['risolta', 'chiusa']))
             ->when(
@@ -258,18 +289,16 @@ class RequestController extends Controller
 
     private function stats(Request $request): array
     {
-        // Per gli operatori i conteggi sono limitati al reparto d'accesso.
-        $reparto = $request->user()->isOperatore() ? $this->operatorReparto($request) : null;
-        $base = fn () => $reparto === null
-            ? MaintenanceRequest::query()
-            : MaintenanceRequest::where('reparto_accesso', $reparto);
+        // I conteggi rispettano la visibilità del ruolo.
+        $scoped = $request->user()->isOperatore() || $request->user()->isManutentoreEsterno();
 
         return [
-            'attive' => $base()->whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'urgenti' => $base()->where('priorita', 'rosso')->whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'mie' => $reparto === null
-                ? MaintenanceRequest::where('created_by', $request->user()->id)->count()
-                : $base()->count(),
+            'attive' => $this->visibleQuery($request)->whereNotIn('status', ['risolta', 'chiusa'])->count(),
+            'urgenti' => $this->visibleQuery($request)->where('priorita', 'rosso')
+                ->whereNotIn('status', ['risolta', 'chiusa'])->count(),
+            'mie' => $scoped
+                ? $this->visibleQuery($request)->count()
+                : MaintenanceRequest::where('created_by', $request->user()->id)->count(),
         ];
     }
 
@@ -279,12 +308,43 @@ class RequestController extends Controller
         return (string) $request->session()->get('op_reparto', '');
     }
 
-    /** Blocca l'operatore che tenta di vedere una richiesta di un altro reparto. */
-    private function guardOperatorAccess(Request $request, MaintenanceRequest $richiesta): void
+    /** Blocca chi tenta di vedere una richiesta fuori dalla propria visibilità. */
+    private function guardAccess(Request $request, MaintenanceRequest $richiesta): void
     {
-        if ($request->user()->isOperatore()
+        $user = $request->user();
+
+        if ($user->isOperatore()
             && $richiesta->reparto_accesso !== $this->operatorReparto($request)) {
             abort(404);
         }
+
+        if ($user->isManutentoreEsterno()
+            && ! ($richiesta->destinatario === 'esterna'
+                && $richiesta->external_maintainer_id === $user->id)) {
+            abort(404);
+        }
+    }
+
+    /** Assegna il manutentore esterno a una richiesta esterna (solo admin). */
+    public function assignExternal(Request $request, MaintenanceRequest $richiesta): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403, 'Permesso negato');
+        abort_unless($richiesta->isEsterna(), 400, 'La richiesta non è di manutenzione esterna.');
+
+        $data = $request->validate([
+            'external_maintainer_id' => [
+                'required', 'integer',
+                Rule::exists('users', 'id')->where('role', 'manutentore_esterno')->where('active', 1),
+            ],
+        ], [
+            'external_maintainer_id.required' => 'Scegli il manutentore esterno.',
+            'external_maintainer_id.exists' => 'Manutentore esterno non valido.',
+        ]);
+
+        $richiesta->external_maintainer_id = $data['external_maintainer_id'];
+        $richiesta->save();
+
+        return redirect()->route('richieste.show', $richiesta)
+            ->with('ok', 'Manutentore esterno assegnato.');
     }
 }

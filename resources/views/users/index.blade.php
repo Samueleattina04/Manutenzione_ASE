@@ -2,7 +2,8 @@
 @section('title', 'Gestione utenti')
 
 @section('content')
-@php($roles = ['operatore', 'manutentore', 'admin'])
+@php($roles = ['operatore', 'manutentore', 'manutentore_esterno', 'admin'])
+@php($ruoliLabel = config('manutenzione.ruoli'))
 
 <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px">
     <h2 style="margin:0; flex:1">Gestione utenti</h2>
@@ -23,7 +24,7 @@
                 <tr>
                     <td><strong>{{ $user->name }}</strong></td>
                     <td>{{ $user->username }}</td>
-                    <td><span class="role-badge">{{ $user->role }}</span></td>
+                    <td><span class="role-badge">{{ $ruoliLabel[$user->role] ?? $user->role }}</span></td>
                     <td>
                         @if($user->active)<span class="pill-on">Attivo</span>
                         @else<span class="pill-off">Disattivato</span>@endif
@@ -52,7 +53,7 @@
             <div class="field"><label>Nome e cognome <span class="req">*</span></label><input type="text" name="name" required></div>
             <div class="field"><label>Username <span class="req">*</span></label><input type="text" name="username" required></div>
             <div class="field"><label>Ruolo <span class="req">*</span></label>
-                <select name="role">@foreach($roles as $r)<option value="{{ $r }}">{{ $r }}</option>@endforeach</select>
+                <select name="role">@foreach($roles as $r)<option value="{{ $r }}">{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach</select>
             </div>
             <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" placeholder="min 6 caratteri" required></div>
             <div class="modal-actions">
@@ -75,7 +76,7 @@
                 <div class="field"><label>Username</label><input type="text" value="{{ $user->username }}" disabled></div>
                 <div class="field"><label>Ruolo <span class="req">*</span></label>
                     <select name="role" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
-                        @foreach($roles as $r)<option value="{{ $r }}" @selected($user->role === $r)>{{ $r }}</option>@endforeach
+                        @foreach($roles as $r)<option value="{{ $r }}" @selected($user->role === $r)>{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach
                     </select>
                 </div>
                 @if($user->id !== auth()->id())

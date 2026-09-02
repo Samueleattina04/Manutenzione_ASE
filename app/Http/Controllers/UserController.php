@@ -22,7 +22,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'role' => ['required', Rule::in(['operatore', 'manutentore', 'admin'])],
+            'role' => ['required', Rule::in(array_keys(config('manutenzione.ruoli')))],
             'password' => ['required', 'string', 'min:6'],
         ]);
 
@@ -41,7 +41,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'role' => ['required', Rule::in(['operatore', 'manutentore', 'admin'])],
+            'role' => ['required', Rule::in(array_keys(config('manutenzione.ruoli')))],
             'active' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:6'],
         ]);
