@@ -3,8 +3,8 @@
 
 @section('content')
 @php
-    $impianti = config('manutenzione.impianti');
-    $reparti = config('manutenzione.reparti');
+    $impianti = \App\Support\Lists::impianti();
+    $reparti = \App\Support\Lists::reparti();
     $priorita = config('manutenzione.priorita');
 @endphp
 

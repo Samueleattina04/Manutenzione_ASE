@@ -41,8 +41,8 @@ class RequestController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $impianti = config('manutenzione.impianti');
-        $reparti = config('manutenzione.reparti');
+        $impianti = \App\Support\Lists::impianti();
+        $reparti = \App\Support\Lists::reparti();
         $priorita = array_keys(config('manutenzione.priorita'));
 
         $destinatari = array_keys(config('manutenzione.destinatari'));

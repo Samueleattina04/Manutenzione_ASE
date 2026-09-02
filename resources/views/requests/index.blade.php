@@ -4,7 +4,7 @@
 @section('content')
     @php
         $priorita = config('manutenzione.priorita');
-        $impianti = config('manutenzione.impianti');
+        $impianti = \App\Support\Lists::impianti();
     @endphp
 
     {{-- Filtri di stato --}}

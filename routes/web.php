@@ -4,6 +4,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,5 +55,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/utenti', [UserController::class, 'store'])->name('utenti.store');
         Route::put('/utenti/{user}', [UserController::class, 'update'])->name('utenti.update');
         Route::post('/utenti/{user}/stato', [UserController::class, 'toggle'])->name('utenti.toggle');
+
+        // Impostazioni: elenchi modificabili (impianti, reparti)
+        Route::get('/impostazioni', [SettingsController::class, 'index'])->name('impostazioni.index');
+        Route::post('/impostazioni/voce', [SettingsController::class, 'storeItem'])->name('impostazioni.voce.store');
+        Route::put('/impostazioni/voce/{listItem}', [SettingsController::class, 'updateItem'])->name('impostazioni.voce.update');
+        Route::delete('/impostazioni/voce/{listItem}', [SettingsController::class, 'destroyItem'])->name('impostazioni.voce.destroy');
+        Route::post('/impostazioni/voce/{listItem}/sposta', [SettingsController::class, 'moveItem'])->name('impostazioni.voce.move');
     });
 });

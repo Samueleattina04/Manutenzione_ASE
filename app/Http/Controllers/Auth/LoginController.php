@@ -29,7 +29,7 @@ class LoginController extends Controller
             return redirect()->route('richieste.index');
         }
 
-        return view('auth.reparto', ['reparti' => config('manutenzione.reparti')]);
+        return view('auth.reparto', ['reparti' => \App\Support\Lists::reparti()]);
     }
 
     /**
@@ -38,7 +38,7 @@ class LoginController extends Controller
      */
     public function enterAsOperatore(Request $request): RedirectResponse
     {
-        $reparti = config('manutenzione.reparti');
+        $reparti = \App\Support\Lists::reparti();
         $data = $request->validate([
             'reparto' => ['required', 'string', 'in:'.implode(',', $reparti)],
         ], [

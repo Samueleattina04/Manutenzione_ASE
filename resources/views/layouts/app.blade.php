@@ -25,6 +25,7 @@
                 @endunless
                 @if($u->isAdmin())
                     <a href="{{ route('utenti.index') }}" class="{{ request()->routeIs('utenti.index') ? 'active' : '' }}">Utenti</a>
+                    <a href="{{ route('impostazioni.index') }}" class="{{ request()->routeIs('impostazioni.index') ? 'active' : '' }}">Impostazioni</a>
                 @endif
             </nav>
             <div class="spacer"></div>
@@ -69,6 +70,7 @@
         @endunless
         @if($u->isAdmin())
             <a href="{{ route('utenti.index') }}" class="{{ request()->routeIs('utenti.index') ? 'active' : '' }}"><span class="ic">👥</span>Utenti</a>
+            <a href="{{ route('impostazioni.index') }}" class="{{ request()->routeIs('impostazioni.index') ? 'active' : '' }}"><span class="ic">⚙️</span>Impostazioni</a>
         @endif
     </nav>
 @endauth
