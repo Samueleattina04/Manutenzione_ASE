@@ -87,6 +87,24 @@ class UserController extends Controller
         return back()->with('ok', $user->active ? 'Utente riattivato.' : 'Utente disattivato.');
     }
 
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        // Non puoi eliminare te stesso.
+        if ($user->id === $request->user()->id) {
+            return back()->withErrors(['user' => 'Non puoi eliminare il tuo stesso account.']);
+        }
+        // L'account operatore ad accesso libero non è eliminabile: serve all'accesso libero.
+        if ($this->isGuestOperatore($user)) {
+            return back()->withErrors(['user' => "Non puoi eliminare l'account operatore ad accesso libero."]);
+        }
+
+        // Le richieste, gli aggiornamenti e gli allegati restano (le chiavi esterne
+        // verso l'utente sono impostate a NULL alla cancellazione).
+        $user->delete();
+
+        return back()->with('ok', 'Utente eliminato.');
+    }
+
     /** L'account condiviso usato dall'accesso libero degli operatori. */
     private function isGuestOperatore(User $user): bool
     {

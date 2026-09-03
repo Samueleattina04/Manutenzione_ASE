@@ -38,6 +38,14 @@
                                 <button type="submit" class="btn btn-ghost btn-sm">{{ $user->active ? 'Disattiva' : 'Riattiva' }}</button>
                             </form>
                         @endif
+                        @if($user->id !== auth()->id() && $user->username !== config('manutenzione.guest_operator_username', 'operatore'))
+                            <form method="POST" action="{{ route('utenti.destroy', $user) }}" style="display:inline"
+                                  data-confirm="Eliminare l'utente «{{ $user->name }}»? L'operazione non è reversibile.">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm">Elimina</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach

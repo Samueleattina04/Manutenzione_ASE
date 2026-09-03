@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/utenti', [UserController::class, 'store'])->name('utenti.store');
         Route::put('/utenti/{user}', [UserController::class, 'update'])->name('utenti.update');
         Route::post('/utenti/{user}/stato', [UserController::class, 'toggle'])->name('utenti.toggle');
+        Route::delete('/utenti/{user}', [UserController::class, 'destroy'])->name('utenti.destroy');
 
         // Impostazioni: elenchi modificabili (impianti, reparti)
         Route::get('/impostazioni', [SettingsController::class, 'index'])->name('impostazioni.index');
