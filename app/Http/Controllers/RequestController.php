@@ -59,7 +59,7 @@ class RequestController extends Controller
             fputcsv($out, [
                 'N.', 'Data apertura', 'Impianto', 'Macchinario', 'Reparto', 'Destinatario',
                 'Priorità', 'Stato', 'Operatore', 'Manutentore', 'Manutentore esterno',
-                'Presa in carico', 'Risolta il', 'Tempo risoluzione',
+                'Presa in carico', 'Intervento previsto', 'Risolta il', 'Tempo risoluzione',
                 'Descrizione evento', 'Note', 'Interventi',
             ], ';');
 
@@ -90,6 +90,7 @@ class RequestController extends Controller
                     $r->assignee?->name,
                     $r->externalMaintainer?->name,
                     $r->taken_at?->format('d/m/Y H:i'),
+                    $r->eta_intervento?->format('d/m/Y H:i'),
                     $r->resolved_at?->format('d/m/Y H:i'),
                     $r->resolutionDuration(),
                     $r->descrizione,
@@ -163,8 +164,9 @@ class RequestController extends Controller
             'attachments',
         ]);
 
-        // Elenco manutentori esterni (per l'assegnazione lato admin).
-        $manutentoriEsterni = ($request->user()->isAdmin() && $richiesta->isEsterna())
+        // Elenco manutentori esterni (per l'assegnazione lato admin su richieste
+        // esterne e straordinarie).
+        $manutentoriEsterni = ($request->user()->isAdmin() && $richiesta->richiedeAssegnazione())
             ? \App\Models\User::where('role', 'manutentore_esterno')->where('active', true)
                 ->orderBy('name')->get()
             : collect();
@@ -305,7 +307,7 @@ class RequestController extends Controller
             )
             ->when(
                 $request->user()->isManutentoreEsterno(),
-                fn ($q) => $q->where('destinatario', 'esterna')
+                fn ($q) => $q->whereIn('destinatario', ['esterna', 'straordinaria'])
                     ->where('external_maintainer_id', $request->user()->id)
             );
     }
@@ -325,8 +327,8 @@ class RequestController extends Controller
             )
             ->when($f['priorita'] !== '', fn ($q) => $q->where('priorita', $f['priorita']))
             ->when($f['impianto'] !== '', fn ($q) => $q->where('impianto', $f['impianto']))
-            // Richieste esterne ancora da assegnare a un manutentore esterno.
-            ->when($f['da_assegnare'], fn ($q) => $q->where('destinatario', 'esterna')->whereNull('external_maintainer_id'))
+            // Richieste esterne/straordinarie ancora da assegnare a un manutentore.
+            ->when($f['da_assegnare'], fn ($q) => $q->whereIn('destinatario', ['esterna', 'straordinaria'])->whereNull('external_maintainer_id'))
             // Filtro per data di apertura (dal / al inclusi).
             ->when($f['dal'], fn ($q) => $q->whereDate('created_at', '>=', $f['dal']))
             ->when($f['al'], fn ($q) => $q->whereDate('created_at', '<=', $f['al']))
@@ -381,7 +383,7 @@ class RequestController extends Controller
             'mie' => $scoped
                 ? $this->visibleQuery($request)->count()
                 : MaintenanceRequest::where('created_by', $request->user()->id)->count(),
-            'da_assegnare' => MaintenanceRequest::where('destinatario', 'esterna')
+            'da_assegnare' => MaintenanceRequest::whereIn('destinatario', ['esterna', 'straordinaria'])
                 ->whereNull('external_maintainer_id')->count(),
         ];
     }
@@ -403,17 +405,47 @@ class RequestController extends Controller
         }
 
         if ($user->isManutentoreEsterno()
-            && ! ($richiesta->destinatario === 'esterna'
+            && ! (in_array($richiesta->destinatario, ['esterna', 'straordinaria'], true)
                 && $richiesta->external_maintainer_id === $user->id)) {
             abort(404);
         }
     }
 
-    /** Assegna il manutentore esterno a una richiesta esterna (solo admin). */
+    /** Imposta il tempo di intervento previsto (manutentore/admin). */
+    public function setEta(Request $request, MaintenanceRequest $richiesta): RedirectResponse
+    {
+        abort_unless($request->user()->canManutentore(), 403, 'Permesso negato');
+        $this->guardAccess($request, $richiesta);
+
+        $opzioni = array_keys(config('manutenzione.eta_opzioni'));
+
+        $data = $request->validate([
+            'eta' => ['required', 'in:'.implode(',', array_merge($opzioni, ['annulla']))],
+        ], [
+            'eta.required' => 'Scegli entro quanto tempo sarai in reparto.',
+            'eta.in' => 'Tempo di intervento non valido.',
+        ]);
+
+        if ($data['eta'] === 'annulla') {
+            $richiesta->eta_intervento = null;
+            $richiesta->save();
+
+            return redirect()->route('richieste.show', $richiesta)
+                ->with('ok', 'Tempo di intervento rimosso.');
+        }
+
+        $richiesta->eta_intervento = now()->addMinutes((int) $data['eta']);
+        $richiesta->save();
+
+        return redirect()->route('richieste.show', $richiesta)
+            ->with('ok', 'Tempo di intervento previsto aggiornato: '.$richiesta->etaLabel().'.');
+    }
+
+    /** Assegna il manutentore esterno a una richiesta esterna/straordinaria (solo admin). */
     public function assignExternal(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
         abort_unless($request->user()->isAdmin(), 403, 'Permesso negato');
-        abort_unless($richiesta->isEsterna(), 400, 'La richiesta non è di manutenzione esterna.');
+        abort_unless($richiesta->richiedeAssegnazione(), 400, 'Questa richiesta non prevede l\'assegnazione di un manutentore.');
 
         $data = $request->validate([
             'external_maintainer_id' => [

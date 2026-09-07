@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'impianto', 'impianto_altro', 'macchinario', 'reparto', 'descrizione',
     'priorita', 'destinatario', 'note', 'operatore', 'status', 'created_by',
-    'assigned_to', 'external_maintainer_id', 'taken_at', 'resolved_at',
+    'assigned_to', 'external_maintainer_id', 'taken_at', 'eta_intervento', 'resolved_at',
 ])]
 class MaintenanceRequest extends Model
 {
@@ -18,6 +18,7 @@ class MaintenanceRequest extends Model
     {
         return [
             'taken_at' => 'datetime',
+            'eta_intervento' => 'datetime',
             'resolved_at' => 'datetime',
         ];
     }
@@ -103,10 +104,48 @@ class MaintenanceRequest extends Model
         return $this->destinatario === 'esterna';
     }
 
-    /** Richiesta esterna in attesa di assegnazione al manutentore esterno. */
+    /**
+     * Destinatari che prevedono l'assegnazione di un manutentore esterno e
+     * l'invio dell'email di notifica: manutenzione esterna e straordinaria.
+     */
+    public function richiedeAssegnazione(): bool
+    {
+        return in_array($this->destinatario, ['esterna', 'straordinaria'], true);
+    }
+
+    /** Richiesta (esterna o straordinaria) in attesa di assegnazione. */
+    public function daAssegnare(): bool
+    {
+        return $this->richiedeAssegnazione() && ! $this->external_maintainer_id;
+    }
+
+    /** Retro-compatibilità: richiesta esterna in attesa di assegnazione. */
     public function esternaDaAssegnare(): bool
     {
-        return $this->isEsterna() && ! $this->external_maintainer_id;
+        return $this->daAssegnare();
+    }
+
+    /**
+     * Etichetta leggibile del tempo di intervento previsto dal manutentore.
+     * Restituisce null se non impostato o se la richiesta è già risolta.
+     */
+    public function etaLabel(): ?string
+    {
+        if (! $this->eta_intervento || $this->isDone()) {
+            return null;
+        }
+
+        $eta = $this->eta_intervento;
+        $ora = $eta->format('H:i');
+
+        if ($eta->isToday()) {
+            return 'oggi alle '.$ora;
+        }
+        if ($eta->isTomorrow()) {
+            return 'domani alle '.$ora;
+        }
+
+        return $eta->format('d/m/Y').' alle '.$ora;
     }
 
     /** Etichetta leggibile per l'impianto (gestisce "Altro"). */

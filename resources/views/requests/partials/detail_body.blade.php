@@ -5,13 +5,19 @@
 <h2 style="margin:12px 0 2px; font-size:20px">{{ $req->macchinario }}</h2>
 <div class="muted" style="font-size:13px">{{ $req->impiantoLabel() }}@if($req->reparto) · {{ $req->reparto }}@endif</div>
 
+@if($req->etaLabel())
+    <div style="margin-top:12px; padding:10px 14px; background:#e8f0fe; border:1px solid #c5d6f7; border-radius:10px; color:#1a3b7a; font-size:14px">
+        🕒 Il manutentore sarà in reparto <strong>{{ $req->etaLabel() }}</strong> per la sistemazione.
+    </div>
+@endif
+
 <div class="detail-grid">
     <div class="dl"><dt>Operatore</dt><dd>{{ $req->operatore }}</dd></div>
     <div class="dl"><dt>Impianto</dt><dd>{{ $req->impiantoLabel() }}</dd></div>
     <div class="dl"><dt>Reparto</dt><dd>{{ $req->reparto ?: '—' }}</dd></div>
     <div class="dl"><dt>Priorità</dt><dd>{{ config('manutenzione.priorita.'.$req->priorita.'.label', $req->priorita) }}</dd></div>
     <div class="dl"><dt>Destinatario</dt><dd>{{ $req->destinatarioLabel() }}</dd></div>
-    @if($req->isEsterna())
+    @if($req->richiedeAssegnazione())
         <div class="dl"><dt>Manutentore esterno</dt>
             <dd>{{ $req->externalMaintainer?->name ?? '⚠️ Da assegnare' }}</dd>
         </div>

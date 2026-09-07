@@ -135,26 +135,37 @@ docker compose up -d --build
 ### Amministratore
 - Tutto quello che fa il manutentore, più la sezione **Utenti** per creare,
   modificare, disattivare gli account e reimpostare le password.
-- Assegna il **manutentore esterno** alle richieste con destinatario
-  *Manutenzione esterna* (dal dettaglio della richiesta).
+- Assegna il **manutentore** alle richieste con destinatario *Manutenzione
+  esterna* o *Manutenzione straordinaria* (dal dettaglio della richiesta).
 
-### Destinatario e manutentori esterni
+### Destinatario e assegnazione del manutentore
 Ogni richiesta ha un **destinatario**: *Manutenzione interna*, *straordinaria*
 o *esterna*.
 
-- Le richieste **esterne** vengono instradate dall'amministratore al
-  **manutentore esterno** corretto (dal dettaglio → *Manutentore esterno*).
+- Le richieste **esterne** e **straordinarie** vengono instradate
+  dall'amministratore al **manutentore** corretto (dal dettaglio → *Assegna a*).
 - Ogni **manutentore esterno** (ruolo con login, creato dall'admin in *Utenti*)
-  vede e gestisce **solo** le richieste esterne assegnate a lui: un esterno che
-  ripara i muletti non vede le richieste destinate a un altro esterno.
+  vede e gestisce **solo** le richieste esterne/straordinarie assegnate a lui:
+  un esterno che ripara i muletti non vede le richieste destinate a un altro.
 - Manutentori interni e amministratori vedono tutte le richieste.
-- **Notifica email:** se al manutentore esterno è associata un'email (in
-  *Utenti*), all'assegnazione parte in automatico un'**email di riepilogo**
-  della richiesta. Utile perché gli esterni non accedono da remoto: ricevono
+- **Notifica email:** se al manutentore è associata un'email (in *Utenti*),
+  all'assegnazione parte in automatico un'**email di riepilogo** della
+  richiesta. Utile perché gli esterni non accedono da remoto: ricevono
   l'avviso e, quando sono in azienda, entrano nell'applicativo per registrare
   l'intervento. Per l'invio reale configura l'SMTP aziendale nel `.env`
   (`MAIL_MAILER=smtp`, `MAIL_HOST`, ecc. — vedi `.env.example`). Con
   `MAIL_MAILER=log` le email vengono solo scritte nei log, non inviate.
+
+### Tempo di intervento previsto
+Quando una richiesta arriva, il **manutentore** può indicare **entro quanto
+tempo sarà in reparto** per la sistemazione (dal dettaglio → *Tempo di
+intervento*). L'orario previsto viene mostrato in evidenza nel dettaglio, così
+anche l'**operatore** sa quando aspettarsi l'intervento.
+
+### Livelli di priorità
+- 🟢 **Verde – Bassa:** intervento entro **8 ore**.
+- 🟡 **Giallo – Media:** intervento entro **4 ore**.
+- 🔴 **Rosso – Urgente:** intervento entro **30 minuti**.
 
 ---
 

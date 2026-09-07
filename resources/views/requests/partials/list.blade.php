@@ -4,7 +4,7 @@
     @if(auth()->user()->isAdmin())
         <a href="{{ route('richieste.index', ['da_assegnare' => 1, 'status' => 'tutte']) }}"
            class="stat {{ $stats['da_assegnare'] > 0 ? 'alert' : '' }}" style="text-decoration:none">
-            <div class="n">{{ $stats['da_assegnare'] }}</div><div class="l">Esterne da assegnare</div>
+            <div class="n">{{ $stats['da_assegnare'] }}</div><div class="l">Da assegnare</div>
         </a>
     @else
         <div class="stat"><div class="n">{{ $stats['mie'] }}</div><div class="l">Le mie richieste</div></div>
@@ -39,9 +39,9 @@
                 <div class="rcard-badges">
                     <x-priorita-badge :value="$r->priorita" />
                     <x-stato-badge :value="$r->status" />
-                    @if($r->isEsterna())
-                        <span class="badge" style="background:#6d4c41">Esterna</span>
-                        @if($r->esternaDaAssegnare())
+                    @if($r->richiedeAssegnazione())
+                        <span class="badge" style="background:#6d4c41">{{ ucfirst($r->destinatario) }}</span>
+                        @if($r->daAssegnare())
                             <span class="badge" style="background:#c62828">Da assegnare</span>
                         @endif
                     @endif

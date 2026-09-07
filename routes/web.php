@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     // Azioni riservate ai manutentori (interni/esterni) e admin
     Route::middleware('role:manutentore,manutentore_esterno,admin')->group(function () {
         Route::post('/richieste/{richiesta}/aggiornamenti', [RequestController::class, 'storeUpdate'])->name('richieste.aggiorna');
+        Route::post('/richieste/{richiesta}/tempo-intervento', [RequestController::class, 'setEta'])->name('richieste.eta');
     });
 
     // Assegnazione del manutentore esterno (solo admin)

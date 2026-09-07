@@ -57,9 +57,20 @@ return [
 
     // value => [etichetta, colore, rango per ordinamento]
     'priorita' => [
-        'verde'  => ['label' => 'Verde – In coda',                       'short' => 'Verde',  'color' => '#2e7d32', 'rank' => 1],
-        'giallo' => ['label' => 'Giallo – Entro la giornata',            'short' => 'Giallo', 'color' => '#f9a825', 'rank' => 2],
-        'rosso'  => ['label' => 'Rosso – Blocco produzione. Urgente!!!', 'short' => 'Rosso',  'color' => '#c62828', 'rank' => 3],
+        'verde'  => ['label' => 'Verde – Bassa (entro 8 ore)',      'short' => 'Verde',  'color' => '#2e7d32', 'rank' => 1],
+        'giallo' => ['label' => 'Giallo – Media (entro 4 ore)',     'short' => 'Giallo', 'color' => '#f9a825', 'rank' => 2],
+        'rosso'  => ['label' => 'Rosso – Urgente (entro 30 minuti)', 'short' => 'Rosso',  'color' => '#c62828', 'rank' => 3],
+    ],
+
+    // Opzioni per il tempo di intervento previsto dal manutentore
+    // ("entro quanto tempo sarà in reparto"): minuti => etichetta.
+    'eta_opzioni' => [
+        15  => 'Tra 15 minuti',
+        30  => 'Tra 30 minuti',
+        60  => 'Tra 1 ora',
+        120 => 'Tra 2 ore',
+        240 => 'Tra 4 ore',
+        480 => 'Tra 8 ore',
     ],
 
     // ciclo di vita di una richiesta

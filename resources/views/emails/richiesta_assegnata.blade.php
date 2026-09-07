@@ -10,7 +10,7 @@
                 <p style="margin:0 0 18px; color:#5b6672;">Numero richiesta: <strong>#{{ $richiesta->id }}</strong></p>
 
                 <p style="margin:0 0 16px;">Ciao {{ $manutentoreNome }},<br>
-                    ti è stata assegnata una richiesta di <strong>manutenzione esterna</strong> da
+                    ti è stata assegnata una richiesta di <strong>{{ mb_strtolower($richiesta->destinatarioLabel()) }}</strong> da
                     <strong>{{ config('manutenzione.azienda') }}</strong>. Di seguito il riepilogo.</p>
 
                 <table cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
