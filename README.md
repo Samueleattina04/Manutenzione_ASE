@@ -169,6 +169,49 @@ anche l'**operatore** sa quando aspettarsi l'intervento.
 
 ---
 
+## Riepilogo giornaliero via email (Excel)
+
+Ogni mattina alle **07:00** (ora italiana) parte in automatico un'email di
+riepilogo delle **richieste ancora aperte**, con in **allegato un file Excel**
+(`.xlsx`) contenente l'elenco completo e tutti i dettagli:
+
+- agli **amministratori** arrivano **tutte** le richieste aperte;
+- a ogni **manutentore** arrivano **solo le richieste assegnate a lui**
+  (per gli interni quelle prese in carico, per gli esterni quelle esterne/
+  straordinarie a lui assegnate).
+
+Chi non ha alcuna richiesta aperta in quel momento **non riceve** l'email
+(niente messaggi a vuoto). L'email viene inviata solo agli utenti che hanno un
+**indirizzo email** configurato (sezione *Utenti*), usando lo stesso SMTP delle
+notifiche (`.env`).
+
+Comando eseguito dallo scheduler:
+
+```bash
+php artisan richieste:riepilogo          # invia il riepilogo
+php artisan richieste:riepilogo --dry    # prova senza inviare (mostra i destinatari)
+```
+
+**Attivazione dello scheduler** (necessaria una volta sola sul server):
+
+- **Linux (cron):** aggiungi una riga che esegue lo scheduler ogni minuto:
+  ```
+  * * * * * cd /percorso/app && php artisan schedule:run >> /dev/null 2>&1
+  ```
+- **Windows / IIS (Utilità di pianificazione):** crea un'attività che parte
+  **ogni minuto** ed esegue:
+  ```
+  php C:\inetpub\wwwroot\Manutenzione_ASE\artisan schedule:run
+  ```
+  (Programma: `php.exe`; Argomenti: `artisan schedule:run`; Inizia in:
+  la cartella dell'app.) Lo scheduler controlla ogni minuto e lancia il
+  riepilogo solo alle 07:00.
+
+> L'orario è fissato su **Europe/Rome**, quindi resta 07:00 anche con il
+> passaggio ora legale/solare.
+
+---
+
 ## Aggiornamenti automatici
 
 L'elenco delle richieste e il dettaglio si aggiornano da soli ogni pochi secondi

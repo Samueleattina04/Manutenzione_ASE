@@ -56,47 +56,9 @@ class RequestController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 per Excel
 
-            fputcsv($out, [
-                'N.', 'Data apertura', 'Impianto', 'Macchinario', 'Reparto', 'Destinatario',
-                'Priorità', 'Stato', 'Operatore', 'Manutentore', 'Manutentore esterno',
-                'Presa in carico', 'Intervento previsto', 'Risolta il', 'Tempo risoluzione',
-                'Descrizione evento', 'Note', 'Interventi',
-            ], ';');
-
+            fputcsv($out, \App\Support\RichiesteExport::headers(), ';');
             foreach ($rows as $r) {
-                $interventi = $r->updates->map(function ($u) {
-                    $stato = $u->status ? config('manutenzione.stati.'.$u->status.'.label', $u->status) : '';
-                    $line = trim(($u->created_at?->format('d/m/Y H:i') ?? '').' '.($u->user?->name ?? ''));
-                    if ($stato) {
-                        $line .= ' ['.$stato.']';
-                    }
-                    if ($u->note) {
-                        $line .= ': '.$u->note;
-                    }
-
-                    return $line;
-                })->implode("\n");
-
-                fputcsv($out, [
-                    $r->id,
-                    $r->created_at?->format('d/m/Y H:i'),
-                    $r->impiantoLabel(),
-                    $r->macchinario,
-                    $r->reparto,
-                    $r->destinatarioLabel(),
-                    config('manutenzione.priorita.'.$r->priorita.'.short', $r->priorita),
-                    config('manutenzione.stati.'.$r->status.'.label', $r->status),
-                    $r->operatore,
-                    $r->assignee?->name,
-                    $r->externalMaintainer?->name,
-                    $r->taken_at?->format('d/m/Y H:i'),
-                    $r->eta_intervento?->format('d/m/Y H:i'),
-                    $r->resolved_at?->format('d/m/Y H:i'),
-                    $r->resolutionDuration(),
-                    $r->descrizione,
-                    $r->note,
-                    $interventi,
-                ], ';');
+                fputcsv($out, \App\Support\RichiesteExport::row($r), ';');
             }
 
             fclose($out);
