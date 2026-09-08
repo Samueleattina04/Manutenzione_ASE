@@ -194,21 +194,30 @@ php artisan richieste:riepilogo --dry    # prova senza inviare (mostra i destina
 
 **Attivazione dello scheduler** (necessaria una volta sola sul server):
 
-- **Linux (cron):** aggiungi una riga che esegue lo scheduler ogni minuto:
+- **Windows / IIS (Utilità di pianificazione) — metodo semplice consigliato:**
+  crea un'attività di base che parte **ogni giorno alle 07:00** ed esegue
+  **direttamente** il comando del riepilogo.
+  - *Attivazione:* Ogni giorno, ora **07:00**.
+  - *Azione:* Avvia programma
+    - **Programma o script:** percorso di `php.exe` (trovalo con `where php`,
+      es. `C:\php\php.exe`)
+    - **Argomenti:** `artisan richieste:riepilogo`
+    - **Inizia in:** `C:\inetpub\wwwroot\Manutenzione_ASE`
+  - Nelle proprietà dell'attività, spunta *Esegui indipendentemente dalla
+    connessione dell'utente* e *Esegui con i privilegi più elevati*.
+
+  Windows usa l'ora locale del server (italiana) e gestisce da solo il
+  passaggio ora legale/solare, quindi le 07:00 restano corrette tutto l'anno.
+  Con questo metodo il comando viene lanciato direttamente e non serve lo
+  scheduler interno di Laravel.
+
+- **Linux (cron), oppure Windows con scheduler Laravel:** in alternativa si può
+  usare lo scheduler interno (definito in `routes/console.php`, fissato su
+  **Europe/Rome**) facendo girare `schedule:run` **ogni minuto**:
   ```
   * * * * * cd /percorso/app && php artisan schedule:run >> /dev/null 2>&1
   ```
-- **Windows / IIS (Utilità di pianificazione):** crea un'attività che parte
-  **ogni minuto** ed esegue:
-  ```
-  php C:\inetpub\wwwroot\Manutenzione_ASE\artisan schedule:run
-  ```
-  (Programma: `php.exe`; Argomenti: `artisan schedule:run`; Inizia in:
-  la cartella dell'app.) Lo scheduler controlla ogni minuto e lancia il
-  riepilogo solo alle 07:00.
-
-> L'orario è fissato su **Europe/Rome**, quindi resta 07:00 anche con il
-> passaggio ora legale/solare.
+  In questo caso è lo scheduler a lanciare il riepilogo solo alle 07:00.
 
 ---
 
