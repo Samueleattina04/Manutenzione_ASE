@@ -81,6 +81,27 @@ sottodominio). Attendi lo stato **Active**.
 > ripiega da solo su 443/TCP). È più sicuro di esporre l'app con il
 > port-forwarding.
 
+> ### 🛡️ Nota per l'IT — sicurezza e limitazione del rischio
+> Il tunnel instrada **solo il servizio configurato** (`localhost:<porta>` =
+> l'app): **non** espone il resto della rete e **non** è una VPN verso la LAN
+> (lo sarebbe solo attivando il "private network routing", che qui non si usa).
+> La superficie esposta è quindi la sola app web, dietro il login **Access**.
+>
+> Il caso peggiore — una falla grave in `cloudflared` (come in qualsiasi
+> software: IIS, PHP, Windows) — comprometterebbe **il server**; l'eventuale
+> "salto" verso la rete interna dipende **dalla segmentazione**, non da
+> Cloudflare. Misure consigliate (standard per qualunque server raggiungibile
+> da internet):
+> 1. **Segmentazione / DMZ**: isolare il server dell'app in una VLAN con regole
+>    che gli impediscano di raggiungere i sistemi interni sensibili (la misura
+>    più efficace: confina un'eventuale compromissione al solo server).
+> 2. Eseguire `cloudflared` con un **account a privilegi minimi**.
+> 3. **Aggiornare** con regolarità cloudflared, IIS, PHP e Windows.
+> 4. Proteggere l'**account Cloudflare** (password forte + **2FA**, pochi admin);
+>    il **token del tunnel** è un segreto.
+> 5. Tenere **Cloudflare Access** davanti all'app (riduce l'esposizione a chi non
+>    è autenticato).
+
 ---
 
 ## 4. Proteggere l'accesso (Cloudflare Access)
