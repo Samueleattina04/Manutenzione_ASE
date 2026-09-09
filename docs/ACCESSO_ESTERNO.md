@@ -72,6 +72,15 @@ sottodominio). Attendi lo stato **Active**.
 4. Salva. L'app risponde su `https://manutenzione.iltuodominio` con certificato
    valido. Segna questo indirizzo: è quello da mettere in `APP_URL` (passo 5).
 
+> ### 🔒 Nota per l'IT — nessuna porta in ingresso
+> Il tunnel è una connessione **in uscita** dal server verso Cloudflare: **non
+> va aperta nessuna porta in ingresso** sul firewall, niente NAT/port-forwarding
+> e nessun IP pubblico statico. Serve solo che il server possa uscire verso
+> Cloudflare su **443/TCP** (di norma già consentito); opzionalmente **7844/UDP
+> e 7844/TCP** per prestazioni migliori (se l'UDP è bloccato, `cloudflared`
+> ripiega da solo su 443/TCP). È più sicuro di esporre l'app con il
+> port-forwarding.
+
 ---
 
 ## 4. Proteggere l'accesso (Cloudflare Access)
