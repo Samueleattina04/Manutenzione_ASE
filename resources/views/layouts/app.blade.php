@@ -7,6 +7,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Richiesta Manutenzione')</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Manutenzione ASE">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -39,6 +43,7 @@
                         <strong>{{ $u->name }}</strong>
                         <span class="role-badge">{{ $u->roleLabel() }}</span>
                     </div>
+                    <button type="button" data-push-enable>🔔 Attiva notifiche</button>
                     @unless($u->isOperatore())
                         <a href="{{ route('profilo.password') }}">🔑 Cambia password</a>
                     @endunless
@@ -79,6 +84,7 @@
 @endauth
 
     <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/push.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

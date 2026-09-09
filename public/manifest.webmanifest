@@ -1,0 +1,16 @@
+{
+    "name": "Manutenzione ASE",
+    "short_name": "Manutenzione",
+    "description": "Gestione delle richieste di manutenzione",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#faf7ef",
+    "theme_color": "#b5850b",
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

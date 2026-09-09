@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
@@ -50,6 +51,11 @@ Route::middleware('auth')->group(function () {
     // Profilo
     Route::get('/profilo/password', [ProfileController::class, 'editPassword'])->name('profilo.password');
     Route::put('/profilo/password', [ProfileController::class, 'updatePassword'])->name('profilo.password.update');
+
+    // Notifiche push (iscrizione del dispositivo)
+    Route::get('/push/chiave', [PushController::class, 'key'])->name('push.key');
+    Route::post('/push/iscrivi', [PushController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('/push/annulla', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
 
     // Gestione utenti (solo admin)
     Route::middleware('role:admin')->group(function () {

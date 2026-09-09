@@ -244,6 +244,15 @@ L'elenco delle richieste e il dettaglio si aggiornano da soli ogni pochi secondi
 (polling), così il manutentore vede comparire subito le nuove richieste e
 l'operatore vede il cambio di stato senza ricaricare la pagina.
 
+## Notifiche push sul telefono
+
+L'app può inviare **notifiche push in tempo reale** sul telefono (Web Push, senza
+dipendenze esterne): nuova richiesta interna → ai manutentori interni; richiesta
+esterna/straordinaria assegnata → al manutentore relativo; cambio stato/intervento
+→ agli operatori del reparto. Richiede un **HTTPS pubblico valido** (vedi
+`docs/ACCESSO_ESTERNO.md`) e le chiavi VAPID generate con `php artisan push:vapid`.
+Ogni utente attiva le notifiche dal menu (**🔔 Attiva notifiche**).
+
 ---
 
 ## Deploy in produzione (nota)

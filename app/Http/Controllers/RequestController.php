@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attachment;
 use App\Models\MaintenanceRequest;
 use App\Models\RequestUpdate;
+use App\Services\PushNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -111,10 +112,14 @@ class RequestController extends Controller
 
         $this->storePhotos($request, $req, 'problema');
 
-        // La manutenzione straordinaria viene assegnata automaticamente all'unico
-        // manutentore straordinario, che riceve subito l'email di apertura.
+        // Notifiche in tempo reale in base al destinatario:
+        // - straordinaria: assegnata automaticamente al manutentore straordinario;
+        // - interna: avvisa tutti i manutentori interni.
+        // (l'esterna viene notificata quando l'admin la assegna)
         if ($req->destinatario === 'straordinaria') {
             $this->assegnaStraordinario($req);
+        } elseif ($req->destinatario === 'interna') {
+            (new PushNotifier())->nuovaRichiestaInterna($req);
         }
 
         return redirect()
@@ -198,6 +203,9 @@ class RequestController extends Controller
                 $this->storePhotos($request, $richiesta, 'soluzione', $update->id);
             }
         });
+
+        // Notifica in tempo reale agli operatori del reparto (cambio stato / intervento).
+        (new PushNotifier())->statoAggiornato($richiesta);
 
         return redirect()
             ->route('richieste.show', $richiesta)
@@ -429,6 +437,9 @@ class RequestController extends Controller
         $richiesta->eta_intervento = now()->addMinutes((int) $data['eta']);
         $richiesta->save();
 
+        // Notifica agli operatori del reparto il tempo di intervento previsto.
+        (new PushNotifier())->tempoIntervento($richiesta);
+
         return redirect()->route('richieste.show', $richiesta)
             ->with('ok', 'Tempo di intervento previsto aggiornato: '.$richiesta->etaLabel().'.');
     }
@@ -522,6 +533,7 @@ class RequestController extends Controller
         $req->external_maintainer_id = $straord->id;
         $req->save();
         $this->inviaEmailAssegnazione($req, $straord);
+        (new PushNotifier())->assegnata($req, $straord);
     }
 
     /** Invia (best-effort) l'email di assegnazione al manutentore. Ritorna true se inviata. */
@@ -545,6 +557,11 @@ class RequestController extends Controller
     private function redirectConEmail(RedirectResponse $redirect, MaintenanceRequest $req, ?\App\Models\User $maintainer): RedirectResponse
     {
         $nome = $maintainer?->name ?? 'manutentore';
+
+        // Notifica push al manutentore assegnato (indipendente dall'email).
+        if ($maintainer) {
+            (new PushNotifier())->assegnata($req, $maintainer);
+        }
 
         if (! $maintainer || ! $maintainer->email) {
             return $redirect->with('ok', 'Richiesta assegnata a '.$nome.'.')

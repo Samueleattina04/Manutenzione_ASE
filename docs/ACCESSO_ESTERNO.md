@@ -98,17 +98,40 @@ iisreset
 
 ## 6. Notifiche push sul telefono (dopo la pubblicazione)
 
-Le notifiche in tempo reale sul telefono (Web Push / PWA) funzionano **solo con
-un certificato HTTPS valido pubblico**: una volta completati i passi qui sopra,
-il requisito è soddisfatto.
+Le notifiche in tempo reale sul telefono (Web Push) funzionano **solo con un
+certificato HTTPS valido pubblico**: una volta completati i passi qui sopra, il
+requisito è soddisfatto. La logica è già inclusa nell'app; va solo attivata.
 
-A quel punto, lato app, si abilita:
-- l'installazione come **app** sul telefono ("Aggiungi a schermata Home");
-- il consenso alle **notifiche**;
-- l'invio automatico di una notifica quando, ad esempio, viene aperta/assegnata
-  una richiesta a un manutentore o cambia lo stato di una richiesta per
-  l'operatore.
+**a) Genera le chiavi VAPID (una volta sola), sul server:**
 
-> Nota tecnica: su iPhone le notifiche push web funzionano da iOS 16.4+ e solo
-> se l'app è stata **aggiunta alla schermata Home**. Su Android funzionano da
-> Chrome senza installazione.
+```powershell
+cd C:\inetpub\wwwroot\Manutenzione_ASE
+php artisan push:vapid
+```
+
+Copia le tre righe stampate (`WEBPUSH_PUBLIC_KEY`, `WEBPUSH_PRIVATE_KEY`,
+`WEBPUSH_SUBJECT`) nel file `.env`, poi:
+
+```powershell
+php artisan config:cache
+iisreset
+```
+
+> La chiave privata è un segreto: non condividerla e non pubblicarla.
+
+**b) Ogni persona attiva le notifiche sul proprio telefono:**
+1. Apre l'app dall'indirizzo pubblico (`https://...`).
+2. **Android:** menu utente in alto a destra → **🔔 Attiva notifiche** →
+   consente le notifiche.
+   **iPhone:** prima **Condividi → Aggiungi a schermata Home**, apre l'app da
+   lì, poi menu utente → **🔔 Attiva notifiche** (richiede iOS 16.4+).
+
+**Quando arrivano le notifiche (in automatico, in tempo reale):**
+- **nuova richiesta interna** → a **tutti i manutentori interni**;
+- **richiesta esterna assegnata** dall'admin → al **manutentore esterno** scelto;
+- **richiesta straordinaria** aperta → al **manutentore straordinario**;
+- **cambio stato / nuovo intervento / tempo di intervento** → agli **operatori**
+  del reparto che ha aperto la richiesta.
+
+> Le notifiche push non sostituiscono l'email di riepilogo delle 07:00: sono la
+> segnalazione immediata; l'email resta il promemoria giornaliero.
