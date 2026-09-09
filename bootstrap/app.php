@@ -17,6 +17,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // Chi non è autenticato viene mandato alla scelta del profilo.
         $middleware->redirectGuestsTo('/entra');
+
+        // Dietro un tunnel/reverse proxy locale (es. Cloudflare Tunnel, che gira
+        // sullo stesso server) fidati degli header X-Forwarded-* così l'app
+        // riconosce l'https pubblico e genera URL corretti.
+        $middleware->trustProxies(
+            at: ['127.0.0.1', '::1'],
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -65,6 +65,10 @@ return [
     // Account condiviso usato dall'accesso libero degli operatori (senza password).
     'guest_operator_username' => 'operatore',
 
+    // Forza gli URL in https (da attivare quando l'app è pubblicata dietro un
+    // tunnel/reverse proxy con certificato valido, es. Cloudflare Tunnel).
+    'force_https' => env('FORCE_HTTPS', false),
+
     // value => [etichetta, colore, rango per ordinamento]
     'priorita' => [
         'verde'  => ['label' => 'Verde – Bassa (entro 8 ore)',      'short' => 'Verde',  'color' => '#2e7d32', 'rank' => 1],
