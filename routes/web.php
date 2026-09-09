@@ -33,15 +33,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/richieste/{richiesta}/foto', [RequestController::class, 'storeAttachment'])->name('richieste.foto');
     Route::delete('/richieste/{richiesta}', [RequestController::class, 'destroy'])->name('richieste.destroy');
 
-    // Azioni riservate ai manutentori (interni/esterni) e admin
-    Route::middleware('role:manutentore,manutentore_esterno,admin')->group(function () {
+    // Azioni riservate ai manutentori (interni/esterni/straordinari) e admin
+    Route::middleware('role:manutentore,manutentore_esterno,manutentore_straordinario,admin')->group(function () {
         Route::post('/richieste/{richiesta}/aggiornamenti', [RequestController::class, 'storeUpdate'])->name('richieste.aggiorna');
         Route::post('/richieste/{richiesta}/tempo-intervento', [RequestController::class, 'setEta'])->name('richieste.eta');
     });
 
-    // Assegnazione del manutentore esterno (solo admin)
+    // Destinatario e assegnazione del manutentore (solo admin)
     Route::middleware('role:admin')->group(function () {
-        Route::post('/richieste/{richiesta}/assegna-esterno', [RequestController::class, 'assignExternal'])->name('richieste.assegna-esterno');
+        Route::post('/richieste/{richiesta}/assegnazione', [RequestController::class, 'updateAssegnazione'])->name('richieste.assegnazione');
     });
 
     // Allegati (immagini protette da login)

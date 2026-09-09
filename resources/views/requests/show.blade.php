@@ -19,35 +19,76 @@
     </div>
 </div>
 
-{{-- Admin: assegnazione del manutentore (richieste esterne e straordinarie) --}}
-@if($me->isAdmin() && $req->richiedeAssegnazione())
+{{-- Admin: destinatario e assegnazione del manutentore --}}
+@if($me->isAdmin())
     <div class="action-card">
-        <div class="block-title" style="margin-top:0">🛠️ Manutentore ({{ $req->destinatarioLabel() }})</div>
-        @if($manutentoriEsterni->isEmpty())
-            <div class="muted" style="font-size:14px">
-                Nessun manutentore esterno configurato. Creane uno dalla sezione
-                <a href="{{ route('utenti.index') }}">Utenti</a> (ruolo “Manutentore esterno”).
+        <div class="block-title" style="margin-top:0">🛠️ Destinatario e assegnazione</div>
+        <form method="POST" action="{{ route('richieste.assegnazione', $req) }}" data-guard>
+            @csrf
+            <div class="field">
+                <label>Tipo di manutenzione</label>
+                <select name="destinatario" data-dest-select>
+                    @foreach(config('manutenzione.destinatari') as $val => $label)
+                        <option value="{{ $val }}" @selected($req->destinatario === $val)>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
-        @else
-            <form method="POST" action="{{ route('richieste.assegna-esterno', $req) }}" data-guard
-                  style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
-                @csrf
-                <div class="field mb0" style="flex:1; min-width:200px">
-                    <label>Assegna a</label>
-                    <select name="external_maintainer_id" required>
-                        <option value="" disabled @selected(! $req->external_maintainer_id)>Scegli il manutentore…</option>
+
+            <div class="field mb0" data-esterno-field style="display:{{ $req->destinatario === 'esterna' ? 'block' : 'none' }}">
+                <label>Manutentore esterno</label>
+                @if($manutentoriEsterni->isEmpty())
+                    <div class="muted" style="font-size:13px">
+                        Nessun manutentore esterno configurato. Crealo in
+                        <a href="{{ route('utenti.index') }}">Utenti</a> (ruolo “Manutentore esterno”).
+                    </div>
+                @else
+                    <select name="external_maintainer_id">
+                        <option value="">Scegli il manutentore esterno…</option>
                         @foreach($manutentoriEsterni as $mx)
                             <option value="{{ $mx->id }}" @selected($req->external_maintainer_id === $mx->id)>{{ $mx->name }}</option>
                         @endforeach
                     </select>
-                </div>
-                <button type="submit" class="btn btn-primary">{{ $req->external_maintainer_id ? 'Riassegna' : 'Assegna' }}</button>
-            </form>
+                @endif
+            </div>
+
+            <div class="hint" data-straord-hint style="display:{{ $req->destinatario === 'straordinaria' ? 'block' : 'none' }}">
+                Verrà assegnata automaticamente al <strong>manutentore straordinario</strong>, che riceve subito l’email.
+            </div>
+            <div class="hint" data-interna-hint style="display:{{ $req->destinatario === 'interna' ? 'block' : 'none' }}">
+                La manutenzione interna è visibile a <strong>tutti i manutentori interni</strong>, senza assegnazione.
+            </div>
+
+            <button type="submit" class="btn btn-primary mt8">Aggiorna</button>
+        </form>
+
+        @if($req->richiedeAssegnazione())
+            <div class="dl" style="margin-top:14px">
+                <dt>{{ $req->manutentoreRuoloLabel() }}</dt>
+                <dd>{{ $req->externalMaintainer?->name ?? '⚠️ Da assegnare' }}</dd>
+            </div>
             @if($req->daAssegnare())
                 <div class="field-error mt8">Questa richiesta non è ancora stata assegnata a un manutentore.</div>
             @endif
         @endif
     </div>
+
+    <script>
+    (function () {
+        var sel = document.querySelector('[data-dest-select]');
+        if (!sel) return;
+        function upd() {
+            var v = sel.value;
+            var e = document.querySelector('[data-esterno-field]');
+            var s = document.querySelector('[data-straord-hint]');
+            var i = document.querySelector('[data-interna-hint]');
+            if (e) e.style.display = (v === 'esterna') ? 'block' : 'none';
+            if (s) s.style.display = (v === 'straordinaria') ? 'block' : 'none';
+            if (i) i.style.display = (v === 'interna') ? 'block' : 'none';
+        }
+        sel.addEventListener('change', upd);
+        upd();
+    })();
+    </script>
 @endif
 
 {{-- Operatore/admin: aggiungi foto del problema (finché la richiesta è aperta) --}}

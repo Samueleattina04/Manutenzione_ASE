@@ -6,12 +6,18 @@ aggiungendo tutto ciò che prima mancava: presa in carico, cambio di stato,
 storico degli interventi con data e ora, descrizione di quello che il
 manutentore ha fatto e **foto** sia del problema che della soluzione.
 
-Due profili con viste diverse:
+Profili con viste diverse:
 
 - **Operatore** — apre le richieste (stesso modulo di prima) e segue l'avanzamento.
-- **Manutentore** — riceve subito le richieste, le prende in carico, aggiorna lo
-  stato e registra l'intervento.
-- **Amministratore** — come il manutentore, più la gestione degli utenti.
+  Accede **senza credenziali** scegliendo il reparto.
+- **Manutentore interno** — vede **tutte** le richieste di *manutenzione interna*,
+  le prende in carico e registra l'intervento.
+- **Manutentore esterno** — vede **solo** le richieste di *manutenzione esterna*
+  assegnate a lui.
+- **Manutentore straordinario** — l'unico che gestisce la *manutenzione
+  straordinaria*: le richieste gli vengono assegnate **in automatico**.
+- **Amministratore** — vede tutto, gestisce gli utenti e assegna/riassegna le
+  richieste (può anche cambiarne il tipo di manutenzione).
 
 ---
 
@@ -81,8 +87,9 @@ Utenti creati al primo avvio:
 | Ruolo | Username | Password |
 |---|---|---|
 | Amministratore | `admin` | `admin123` |
-| Manutentore | `manutentore` | `manutentore123` |
+| Manutentore interno | `manutentore` | `manutentore123` |
 | Manutentore esterno (demo) | `esterno` | `esterno123` |
+| Manutentore straordinario (demo) | `straordinario` | `straordinario123` |
 | Operatore (accesso libero) | `operatore` | *(non serve: entra dal pulsante “Operatore”)* |
 
 > ⚠️ **Cambia subito le password** dopo il primo accesso (menu in alto a destra →
@@ -127,33 +134,41 @@ docker compose up -d --build
 > amministratori vedono **tutte** le richieste.
 
 ### Manutentore
-1. Vede tutte le richieste ordinate per priorità (rosso/giallo/verde) e data.
+1. Vede le richieste di sua competenza, ordinate per priorità (rosso/giallo/verde) e data.
 2. Apre una richiesta e clicca **Prendi in carico**.
 3. Aggiorna lo stato, scrive la **descrizione dell'intervento** e allega le
    **foto della soluzione**.
 
 ### Amministratore
 - Tutto quello che fa il manutentore, più la sezione **Utenti** per creare,
-  modificare, disattivare gli account e reimpostare le password.
-- Assegna il **manutentore** alle richieste con destinatario *Manutenzione
-  esterna* o *Manutenzione straordinaria* (dal dettaglio della richiesta).
+  modificare, disattivare o **eliminare** gli account e reimpostare le password.
+- Dal dettaglio di una richiesta può **cambiarne il destinatario** (interna /
+  straordinaria / esterna) e, per le esterne, **scegliere il manutentore**.
 
 ### Destinatario e assegnazione del manutentore
-Ogni richiesta ha un **destinatario**: *Manutenzione interna*, *straordinaria*
-o *esterna*.
+Ogni richiesta ha un **destinatario** che ne determina chi la gestisce:
 
-- Le richieste **esterne** e **straordinarie** vengono instradate
-  dall'amministratore al **manutentore** corretto (dal dettaglio → *Assegna a*).
-- Ogni **manutentore esterno** (ruolo con login, creato dall'admin in *Utenti*)
-  vede e gestisce **solo** le richieste esterne/straordinarie assegnate a lui:
-  un esterno che ripara i muletti non vede le richieste destinate a un altro.
-- Manutentori interni e amministratori vedono tutte le richieste.
+- **Manutenzione interna** → **nessuna assegnazione**: la vedono **tutti i
+  manutentori interni**.
+- **Manutenzione straordinaria** → assegnata **in automatico** all'unico
+  **manutentore straordinario** già all'apertura della richiesta, con
+  **email immediata**.
+- **Manutenzione esterna** → l'**amministratore** sceglie il **manutentore
+  esterno** dal dettaglio; alla scelta parte l'**email** di assegnazione. Ogni
+  esterno vede **solo** le proprie richieste (un esterno che ripara i muletti
+  non vede quelle destinate a un altro).
+
+L'amministratore può in ogni momento **cambiare il tipo di manutenzione** di una
+richiesta (es. da straordinaria a esterna, o a interna): il sistema riassegna il
+manutentore giusto (o azzera l'assegnazione per le interne) e invia l'email di
+notifica se cambia il manutentore.
+
 - **Notifica email:** se al manutentore è associata un'email (in *Utenti*),
   all'assegnazione parte in automatico un'**email di riepilogo** della
-  richiesta. Utile perché gli esterni non accedono da remoto: ricevono
-  l'avviso e, quando sono in azienda, entrano nell'applicativo per registrare
-  l'intervento. Per l'invio reale configura l'SMTP aziendale nel `.env`
-  (`MAIL_MAILER=smtp`, `MAIL_HOST`, ecc. — vedi `.env.example`). Con
+  richiesta. Utile perché gli esterni/straordinari non accedono da remoto:
+  ricevono l'avviso e, quando sono in azienda, entrano nell'applicativo per
+  registrare l'intervento. Per l'invio reale configura l'SMTP aziendale nel
+  `.env` (`MAIL_MAILER=smtp`, `MAIL_HOST`, ecc. — vedi `.env.example`). Con
   `MAIL_MAILER=log` le email vengono solo scritte nei log, non inviate.
 
 ### Tempo di intervento previsto
@@ -176,9 +191,11 @@ riepilogo delle **richieste ancora aperte**, con in **allegato un file Excel**
 (`.xlsx`) contenente l'elenco completo e tutti i dettagli:
 
 - agli **amministratori** arrivano **tutte** le richieste aperte;
-- a ogni **manutentore** arrivano **solo le richieste assegnate a lui**
-  (per gli interni quelle prese in carico, per gli esterni quelle esterne/
-  straordinarie a lui assegnate).
+- ai **manutentori interni** arrivano tutte le richieste di *manutenzione
+  interna* aperte;
+- ai **manutentori esterni** arrivano solo le *esterne* aperte a loro assegnate;
+- al **manutentore straordinario** arrivano le richieste di *manutenzione
+  straordinaria* aperte.
 
 Chi non ha alcuna richiesta aperta in quel momento **non riceve** l'email
 (niente messaggi a vuoto). L'email viene inviata solo agli utenti che hanno un

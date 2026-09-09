@@ -23,7 +23,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(array_keys(config('manutenzione.ruoli')))],
+            'role' => ['required', Rule::in(config('manutenzione.ruoli_assegnabili'))],
             'password' => ['required', 'string', 'min:6'],
         ]);
 

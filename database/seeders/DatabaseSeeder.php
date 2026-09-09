@@ -12,8 +12,9 @@ class DatabaseSeeder extends Seeder
         $defaults = [
             ['name' => 'Amministratore', 'username' => 'admin', 'password' => 'admin123', 'role' => 'admin'],
             ['name' => 'Operatore', 'username' => 'operatore', 'password' => 'operatore123', 'role' => 'operatore'],
-            ['name' => 'Manutentore Demo', 'username' => 'manutentore', 'password' => 'manutentore123', 'role' => 'manutentore'],
+            ['name' => 'Manutentore Interno Demo', 'username' => 'manutentore', 'password' => 'manutentore123', 'role' => 'manutentore'],
             ['name' => 'Manutentore Esterno Demo', 'username' => 'esterno', 'password' => 'esterno123', 'role' => 'manutentore_esterno'],
+            ['name' => 'Manutentore Straordinario Demo', 'username' => 'straordinario', 'password' => 'straordinario123', 'role' => 'manutentore_straordinario'],
         ];
 
         foreach ($defaults as $u) {

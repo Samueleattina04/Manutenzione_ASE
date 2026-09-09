@@ -18,7 +18,7 @@
     <div class="dl"><dt>Priorità</dt><dd>{{ config('manutenzione.priorita.'.$req->priorita.'.label', $req->priorita) }}</dd></div>
     <div class="dl"><dt>Destinatario</dt><dd>{{ $req->destinatarioLabel() }}</dd></div>
     @if($req->richiedeAssegnazione())
-        <div class="dl"><dt>Manutentore esterno</dt>
+        <div class="dl"><dt>{{ $req->manutentoreRuoloLabel() }}</dt>
             <dd>{{ $req->externalMaintainer?->name ?? '⚠️ Da assegnare' }}</dd>
         </div>
     @endif

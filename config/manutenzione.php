@@ -47,9 +47,19 @@ return [
     // Etichette leggibili dei ruoli.
     'ruoli' => [
         'operatore' => 'Operatore',
-        'manutentore' => 'Manutentore',
+        'manutentore' => 'Manutentore interno',
         'manutentore_esterno' => 'Manutentore esterno',
+        'manutentore_straordinario' => 'Manutentore straordinario',
         'admin' => 'Amministratore',
+    ],
+
+    // Ruoli selezionabili nella gestione utenti (l'operatore accede senza
+    // credenziali, quindi non è un ruolo da assegnare manualmente).
+    'ruoli_assegnabili' => [
+        'manutentore',
+        'manutentore_esterno',
+        'manutentore_straordinario',
+        'admin',
     ],
 
     // Account condiviso usato dall'accesso libero degli operatori (senza password).

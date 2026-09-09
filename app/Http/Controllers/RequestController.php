@@ -111,6 +111,12 @@ class RequestController extends Controller
 
         $this->storePhotos($request, $req, 'problema');
 
+        // La manutenzione straordinaria viene assegnata automaticamente all'unico
+        // manutentore straordinario, che riceve subito l'email di apertura.
+        if ($req->destinatario === 'straordinaria') {
+            $this->assegnaStraordinario($req);
+        }
+
         return redirect()
             ->route('richieste.show', $req)
             ->with('ok', 'Richiesta inviata con successo.');
@@ -126,9 +132,9 @@ class RequestController extends Controller
             'attachments',
         ]);
 
-        // Elenco manutentori esterni (per l'assegnazione lato admin su richieste
-        // esterne e straordinarie).
-        $manutentoriEsterni = ($request->user()->isAdmin() && $richiesta->richiedeAssegnazione())
+        // Elenco manutentori esterni (l'admin può assegnarli o cambiare il
+        // destinatario di una richiesta in "esterna").
+        $manutentoriEsterni = $request->user()->isAdmin()
             ? \App\Models\User::where('role', 'manutentore_esterno')->where('active', true)
                 ->orderBy('name')->get()
             : collect();
@@ -262,15 +268,29 @@ class RequestController extends Controller
      */
     private function visibleQuery(Request $request): Builder
     {
+        $user = $request->user();
+
         return MaintenanceRequest::query()
+            // Operatore: solo il reparto scelto all'accesso.
             ->when(
-                $request->user()->isOperatore(),
+                $user->isOperatore(),
                 fn ($q) => $q->where('reparto_accesso', $this->operatorReparto($request))
             )
+            // Manutentore interno: tutte le richieste di manutenzione interna.
             ->when(
-                $request->user()->isManutentoreEsterno(),
-                fn ($q) => $q->whereIn('destinatario', ['esterna', 'straordinaria'])
-                    ->where('external_maintainer_id', $request->user()->id)
+                $user->isManutentore(),
+                fn ($q) => $q->where('destinatario', 'interna')
+            )
+            // Manutentore esterno: solo le esterne assegnate a lui.
+            ->when(
+                $user->isManutentoreEsterno(),
+                fn ($q) => $q->where('destinatario', 'esterna')
+                    ->where('external_maintainer_id', $user->id)
+            )
+            // Manutentore straordinario: le richieste di manutenzione straordinaria.
+            ->when(
+                $user->isManutentoreStraordinario(),
+                fn ($q) => $q->where('destinatario', 'straordinaria')
             );
     }
 
@@ -336,7 +356,7 @@ class RequestController extends Controller
     private function stats(Request $request): array
     {
         // I conteggi rispettano la visibilità del ruolo.
-        $scoped = $request->user()->isOperatore() || $request->user()->isManutentoreEsterno();
+        $scoped = ! $request->user()->isAdmin();
 
         return [
             'attive' => $this->visibleQuery($request)->whereNotIn('status', ['risolta', 'chiusa'])->count(),
@@ -366,9 +386,19 @@ class RequestController extends Controller
             abort(404);
         }
 
+        if ($user->isManutentore()
+            && $richiesta->destinatario !== 'interna') {
+            abort(404);
+        }
+
         if ($user->isManutentoreEsterno()
-            && ! (in_array($richiesta->destinatario, ['esterna', 'straordinaria'], true)
+            && ! ($richiesta->destinatario === 'esterna'
                 && $richiesta->external_maintainer_id === $user->id)) {
+            abort(404);
+        }
+
+        if ($user->isManutentoreStraordinario()
+            && $richiesta->destinatario !== 'straordinaria') {
             abort(404);
         }
     }
@@ -403,12 +433,58 @@ class RequestController extends Controller
             ->with('ok', 'Tempo di intervento previsto aggiornato: '.$richiesta->etaLabel().'.');
     }
 
-    /** Assegna il manutentore esterno a una richiesta esterna/straordinaria (solo admin). */
-    public function assignExternal(Request $request, MaintenanceRequest $richiesta): RedirectResponse
+    /**
+     * Aggiorna il destinatario di una richiesta e la relativa assegnazione (solo admin):
+     * - interna: nessun manutentore assegnato (la vedono tutti gli interni);
+     * - straordinaria: assegnata automaticamente al manutentore straordinario;
+     * - esterna: assegnata al manutentore esterno scelto dall'admin.
+     * Se l'assegnazione cambia, invia l'email di notifica al manutentore.
+     */
+    public function updateAssegnazione(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
         abort_unless($request->user()->isAdmin(), 403, 'Permesso negato');
-        abort_unless($richiesta->richiedeAssegnazione(), 400, 'Questa richiesta non prevede l\'assegnazione di un manutentore.');
 
+        $destinatari = array_keys(config('manutenzione.destinatari'));
+        $request->validate([
+            'destinatario' => ['required', 'in:'.implode(',', $destinatari)],
+        ], [
+            'destinatario.required' => 'Scegli il tipo di manutenzione.',
+        ]);
+
+        $dest = $request->input('destinatario');
+        $precedente = $richiesta->external_maintainer_id;
+        $richiesta->destinatario = $dest;
+        $redirect = redirect()->route('richieste.show', $richiesta);
+
+        // Manutenzione interna: nessuna assegnazione.
+        if ($dest === 'interna') {
+            $richiesta->external_maintainer_id = null;
+            $richiesta->save();
+
+            return $redirect->with('ok', 'Richiesta impostata come manutenzione interna: visibile a tutti i manutentori interni.');
+        }
+
+        // Manutenzione straordinaria: assegnazione automatica al manutentore straordinario.
+        if ($dest === 'straordinaria') {
+            $straord = $this->manutentoreStraordinario();
+            if (! $straord) {
+                $richiesta->external_maintainer_id = null;
+                $richiesta->save();
+
+                return $redirect->with('ok', 'Richiesta impostata come manutenzione straordinaria.')
+                    ->with('warn', 'Nessun manutentore straordinario configurato: crea un utente con quel ruolo in Utenti.');
+            }
+            $richiesta->external_maintainer_id = $straord->id;
+            $richiesta->save();
+
+            if ($richiesta->external_maintainer_id !== $precedente) {
+                return $this->redirectConEmail($redirect, $richiesta, $straord);
+            }
+
+            return $redirect->with('ok', 'Richiesta assegnata al manutentore straordinario '.$straord->name.'.');
+        }
+
+        // Manutenzione esterna: l'admin sceglie il manutentore esterno.
         $data = $request->validate([
             'external_maintainer_id' => [
                 'required', 'integer',
@@ -419,30 +495,67 @@ class RequestController extends Controller
             'external_maintainer_id.exists' => 'Manutentore esterno non valido.',
         ]);
 
-        $precedente = $richiesta->external_maintainer_id;
-        $richiesta->external_maintainer_id = $data['external_maintainer_id'];
+        $richiesta->external_maintainer_id = (int) $data['external_maintainer_id'];
         $richiesta->save();
 
-        // Notifica via email al manutentore esterno (solo se è cambiato).
-        $redirect = redirect()->route('richieste.show', $richiesta);
         if ($richiesta->external_maintainer_id !== $precedente) {
-            $mx = $richiesta->externalMaintainer()->first();
-            if ($mx && $mx->email) {
-                try {
-                    Mail::to($mx->email)->send(new RichiestaEsternaAssegnata($richiesta, $mx->name));
-                    return $redirect->with('ok', 'Manutentore esterno assegnato. Email di notifica inviata a '.$mx->email.'.');
-                } catch (\Throwable $e) {
-                    report($e);
-
-                    return $redirect->with('ok', 'Manutentore esterno assegnato.')
-                        ->with('warn', "Assegnazione riuscita, ma l'email di notifica non è stata inviata: verifica la configurazione email del server.");
-                }
-            }
-
-            return $redirect->with('ok', 'Manutentore esterno assegnato.')
-                ->with('warn', 'Questo manutentore non ha un\'email configurata: aggiungila in Utenti per inviare la notifica.');
+            return $this->redirectConEmail($redirect, $richiesta, $richiesta->externalMaintainer()->first());
         }
 
         return $redirect->with('ok', 'Manutentore esterno assegnato.');
+    }
+
+    /** L'unico manutentore straordinario attivo (se configurato). */
+    private function manutentoreStraordinario(): ?\App\Models\User
+    {
+        return \App\Models\User::where('role', 'manutentore_straordinario')
+            ->where('active', true)->orderBy('id')->first();
+    }
+
+    /** Assegna la richiesta straordinaria al manutentore straordinario e invia l'email di apertura. */
+    private function assegnaStraordinario(MaintenanceRequest $req): void
+    {
+        $straord = $this->manutentoreStraordinario();
+        if (! $straord) {
+            return; // resterà "da assegnare" finché non si crea il ruolo
+        }
+        $req->external_maintainer_id = $straord->id;
+        $req->save();
+        $this->inviaEmailAssegnazione($req, $straord);
+    }
+
+    /** Invia (best-effort) l'email di assegnazione al manutentore. Ritorna true se inviata. */
+    private function inviaEmailAssegnazione(MaintenanceRequest $req, ?\App\Models\User $maintainer): bool
+    {
+        if (! $maintainer || ! $maintainer->email) {
+            return false;
+        }
+        try {
+            Mail::to($maintainer->email)->send(new RichiestaEsternaAssegnata($req, $maintainer->name));
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    /** Redirect con messaggio a seconda dell'esito dell'invio email. */
+    private function redirectConEmail(RedirectResponse $redirect, MaintenanceRequest $req, ?\App\Models\User $maintainer): RedirectResponse
+    {
+        $nome = $maintainer?->name ?? 'manutentore';
+
+        if (! $maintainer || ! $maintainer->email) {
+            return $redirect->with('ok', 'Richiesta assegnata a '.$nome.'.')
+                ->with('warn', 'Questo manutentore non ha un\'email configurata: aggiungila in Utenti per inviare la notifica.');
+        }
+
+        if ($this->inviaEmailAssegnazione($req, $maintainer)) {
+            return $redirect->with('ok', 'Richiesta assegnata a '.$nome.'. Email di notifica inviata a '.$maintainer->email.'.');
+        }
+
+        return $redirect->with('ok', 'Richiesta assegnata a '.$nome.'.')
+            ->with('warn', "Assegnazione riuscita, ma l'email di notifica non è stata inviata: verifica la configurazione email del server.");
     }
 }

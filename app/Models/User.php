@@ -44,10 +44,21 @@ class User extends Authenticatable
         return $this->role === 'manutentore_esterno';
     }
 
+    public function isManutentoreStraordinario(): bool
+    {
+        return $this->role === 'manutentore_straordinario';
+    }
+
+    /** Manutentore "specialista" a cui le richieste vengono assegnate (esterno o straordinario). */
+    public function riceveAssegnazioni(): bool
+    {
+        return in_array($this->role, ['manutentore_esterno', 'manutentore_straordinario'], true);
+    }
+
     /** Può prendere in carico e aggiornare le richieste. */
     public function canManutentore(): bool
     {
-        return in_array($this->role, ['manutentore', 'manutentore_esterno', 'admin'], true);
+        return in_array($this->role, ['manutentore', 'manutentore_esterno', 'manutentore_straordinario', 'admin'], true);
     }
 
     public function roleLabel(): string

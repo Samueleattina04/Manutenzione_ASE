@@ -62,7 +62,7 @@
                     <option value="{{ $val }}" @selected(old('destinatario', 'interna') === $val)>{{ $label }}</option>
                 @endforeach
             </select>
-            <div class="hint">Per la manutenzione esterna e straordinaria sarà l’amministratore ad assegnare il manutentore.</div>
+            <div class="hint">La manutenzione straordinaria viene assegnata automaticamente al manutentore straordinario; per la manutenzione esterna sarà l’amministratore a scegliere il manutentore.</div>
             @error('destinatario')<div class="field-error">{{ $message }}</div>@enderror
         </div>
 

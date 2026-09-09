@@ -2,7 +2,7 @@
 @section('title', 'Gestione utenti')
 
 @section('content')
-@php($roles = ['operatore', 'manutentore', 'manutentore_esterno', 'admin'])
+@php($roles = config('manutenzione.ruoli_assegnabili'))
 @php($ruoliLabel = config('manutenzione.ruoli'))
 
 <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px">
@@ -85,10 +85,13 @@
                 <div class="field"><label>Nome e cognome <span class="req">*</span></label><input type="text" name="name" value="{{ $user->name }}" required></div>
                 <div class="field"><label>Username</label><input type="text" value="{{ $user->username }}" disabled></div>
                 <div class="field"><label>Email</label><input type="email" name="email" value="{{ $user->email }}" placeholder="Per i manutentori esterni"></div>
+                @php($editRoles = in_array($user->role, $roles, true) ? $roles : array_merge([$user->role], $roles))
+                @php($roleLocked = $user->id === auth()->id() || $user->username === config('manutenzione.guest_operator_username', 'operatore'))
                 <div class="field"><label>Ruolo <span class="req">*</span></label>
-                    <select name="role" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
-                        @foreach($roles as $r)<option value="{{ $r }}" @selected($user->role === $r)>{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach
+                    <select name="role" {{ $roleLocked ? 'disabled' : '' }}>
+                        @foreach($editRoles as $r)<option value="{{ $r }}" @selected($user->role === $r)>{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach
                     </select>
+                    @if($roleLocked)<input type="hidden" name="role" value="{{ $user->role }}">@endif
                 </div>
                 @if($user->id !== auth()->id())
                     <div class="field">

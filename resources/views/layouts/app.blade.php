@@ -20,7 +20,7 @@
             </a>
             <nav class="nav">
                 <a href="{{ route('richieste.index') }}" class="{{ request()->routeIs('richieste.index') ? 'active' : '' }}">Richieste</a>
-                @unless($u->isManutentoreEsterno())
+                @unless($u->riceveAssegnazioni())
                     <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}">Nuova</a>
                 @endunless
                 @if($u->isAdmin())
@@ -68,7 +68,7 @@
 @auth
     <nav class="mobile-nav">
         <a href="{{ route('richieste.index') }}" class="{{ request()->routeIs('richieste.index') ? 'active' : '' }}"><span class="ic">📋</span>Richieste</a>
-        @unless($u->isManutentoreEsterno())
+        @unless($u->riceveAssegnazioni())
             <a href="{{ route('richieste.create') }}" class="{{ request()->routeIs('richieste.create') ? 'active' : '' }}"><span class="ic">➕</span>Nuova</a>
         @endunless
         @if($u->isAdmin())

@@ -105,7 +105,7 @@ class MaintenanceRequest extends Model
     }
 
     /**
-     * Destinatari che prevedono l'assegnazione di un manutentore esterno e
+     * Destinatari che prevedono l'assegnazione di un manutentore specifico e
      * l'invio dell'email di notifica: manutenzione esterna e straordinaria.
      */
     public function richiedeAssegnazione(): bool
@@ -113,10 +113,24 @@ class MaintenanceRequest extends Model
         return in_array($this->destinatario, ['esterna', 'straordinaria'], true);
     }
 
+    /** Solo la manutenzione esterna richiede una scelta manuale dell'admin. */
+    public function assegnazioneManuale(): bool
+    {
+        return $this->destinatario === 'esterna';
+    }
+
     /** Richiesta (esterna o straordinaria) in attesa di assegnazione. */
     public function daAssegnare(): bool
     {
         return $this->richiedeAssegnazione() && ! $this->external_maintainer_id;
+    }
+
+    /** Etichetta del ruolo del manutentore assegnato, in base al destinatario. */
+    public function manutentoreRuoloLabel(): string
+    {
+        return $this->destinatario === 'straordinaria'
+            ? 'Manutentore straordinario'
+            : 'Manutentore esterno';
     }
 
     /** Retro-compatibilità: richiesta esterna in attesa di assegnazione. */

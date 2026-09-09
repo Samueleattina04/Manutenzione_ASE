@@ -27,8 +27,8 @@ class InviaRiepilogoGiornaliero extends Command
         $dataOggi = now()->format('d/m/Y');
         $stamp = now()->format('Y-m-d');
 
-        // Destinatari: admin e manutentori (interni/esterni) attivi con un'email.
-        $destinatari = User::whereIn('role', ['admin', 'manutentore', 'manutentore_esterno'])
+        // Destinatari: admin e manutentori (interni/esterni/straordinari) attivi con un'email.
+        $destinatari = User::whereIn('role', ['admin', 'manutentore', 'manutentore_esterno', 'manutentore_straordinario'])
             ->where('active', true)
             ->whereNotNull('email')
             ->where('email', '!=', '')
@@ -87,8 +87,9 @@ class InviaRiepilogoGiornaliero extends Command
     /**
      * Richieste aperte visibili al destinatario:
      * - admin: tutte;
-     * - manutentore interno: quelle prese in carico da lui (assigned_to);
-     * - manutentore esterno: quelle esterne/straordinarie assegnate a lui.
+     * - manutentore interno: tutte le richieste di manutenzione interna;
+     * - manutentore esterno: le esterne assegnate a lui;
+     * - manutentore straordinario: le richieste di manutenzione straordinaria.
      */
     private function richiestePer(User $user): Builder
     {
@@ -99,11 +100,13 @@ class InviaRiepilogoGiornaliero extends Command
         if ($user->isAdmin()) {
             // tutte
         } elseif ($user->isManutentoreEsterno()) {
-            $q->whereIn('destinatario', ['esterna', 'straordinaria'])
+            $q->where('destinatario', 'esterna')
                 ->where('external_maintainer_id', $user->id);
+        } elseif ($user->isManutentoreStraordinario()) {
+            $q->where('destinatario', 'straordinaria');
         } else {
-            // manutentore interno: solo le richieste assegnate a lui
-            $q->where('assigned_to', $user->id);
+            // manutentore interno: tutte le richieste di manutenzione interna
+            $q->where('destinatario', 'interna');
         }
 
         return $q
