@@ -19,38 +19,58 @@ Approccio scelto: **Cloudflare Tunnel + Cloudflare Access**.
 
 ## 1. Prerequisiti
 
-- Un **dominio** gestibile su Cloudflare (piano **Free**). Esempi:
-  - un **sottodominio** di un dominio aziendale già esistente
-    (es. `manutenzione.nutkao.it`), oppure
-  - un **dominio dedicato** comprato solo per questa app.
+- Un **dominio** (il direttore ha approvato l'acquisto). Consigliato: comprarlo
+  **direttamente su Cloudflare** (vedi passo 2, opzione A) — così il DNS è già
+  su Cloudflare e non c'è nulla da delegare. Costo ~10 €/anno.
 - Accesso **amministratore** al server Windows dove gira l'app.
 
 ---
 
-## 2. Aggiungere il dominio a Cloudflare
+## 2. Dominio + account Cloudflare
 
-1. Crea un account su <https://dash.cloudflare.com> (gratis).
-2. **Add a site** → inserisci il dominio → piano **Free**.
-3. Cloudflare ti darà due **nameserver**: l'IT deve impostarli sul dominio
-   (o delegare il solo sottodominio). Attendi la conferma "Active".
+Crea un account gratuito su <https://dash.cloudflare.com>. Poi, per il dominio,
+scegli **una** delle due strade:
+
+**Opzione A — comprare il dominio su Cloudflare (più semplice, consigliata).**
+Dashboard → **Domain Registration** → **Register Domains** → cerca un nome
+(es. `manutenzione-ase.com` o `manutenzione-ase.it`) → acquista (prezzo "a
+costo", ~10 €/anno). Il dominio è **già** su Cloudflare: nessuna delega DNS,
+niente da chiedere a nessuno. Fine.
+
+**Opzione B — usare un dominio comprato altrove** (o un sottodominio aziendale):
+**Add a site** → inserisci il dominio → piano **Free** → Cloudflare fornisce due
+**nameserver** da impostare presso il registrar (o delegando il solo
+sottodominio). Attendi lo stato **Active**.
 
 ---
 
-## 3. Installare il tunnel sul server (Zero Trust)
+## 3. Installare il tunnel sul server Windows (Zero Trust)
 
 1. Nel dashboard: **Zero Trust** → **Networks** → **Tunnels** → **Create a tunnel**
-   → tipo **Cloudflared** → dai un nome (es. `manutenzione-ase`).
-2. Scegli **Windows (64-bit)**: Cloudflare mostra un comando `cloudflared ...`
-   già pronto con il token del tunnel. **Installalo come servizio** con quel
-   comando (da PowerShell come amministratore): così parte da solo all'avvio.
-3. Nella scheda **Public Hostname** del tunnel, aggiungi:
-   - **Subdomain/Domain:** l'indirizzo pubblico che vuoi (es.
-     `manutenzione` + `nutkao.it`).
-   - **Service:** `HTTP` → `localhost:80`
-     *(usa la porta su cui IIS serve l'app localmente — se è la 87, metti
+   → tipo **Cloudflared** → nome (es. `manutenzione-ase`) → **Save**.
+2. Alla schermata "Install connector" scegli **Windows / 64-bit**. Cloudflare
+   mostra un comando con un **token** lungo. Sul server, da **PowerShell come
+   amministratore**:
+
+   ```powershell
+   # installa cloudflared (una volta):
+   winget install --id Cloudflare.cloudflared
+   #  (se winget non c'è, scarica cloudflared-windows-amd64.exe dal sito
+   #   Cloudflare e rinominalo cloudflared.exe)
+
+   # installa il tunnel come SERVIZIO (parte da solo all'avvio del server):
+   cloudflared.exe service install <INCOLLA-QUI-IL-TOKEN-DEL-DASHBOARD>
+   ```
+
+   Nel giro di pochi secondi il tunnel risulta **HEALTHY** nel dashboard.
+3. Scheda **Public Hostnames** del tunnel → **Add a public hostname**:
+   - **Subdomain:** `manutenzione` (o quello che preferisci) · **Domain:** il tuo
+     dominio.
+   - **Type:** `HTTP` · **URL:** `localhost:80`
+     *(usa la porta su cui IIS serve l'app in locale — se è la 87, metti
      `localhost:87`).*
-4. Salva. Da questo momento l'app risponde su
-   `https://manutenzione.nutkao.it` con certificato valido.
+4. Salva. L'app risponde su `https://manutenzione.iltuodominio` con certificato
+   valido. Segna questo indirizzo: è quello da mettere in `APP_URL` (passo 5).
 
 ---
 
