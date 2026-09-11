@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\EnsureAccessCode;
 use App\Models\ListItem;
 use App\Support\Lists;
+use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,7 +20,28 @@ class SettingsController extends Controller
         return view('settings.index', [
             'impianti' => ListItem::where('type', 'impianto')->orderBy('position')->orderBy('id')->get(),
             'reparti' => ListItem::where('type', 'reparto')->orderBy('position')->orderBy('id')->get(),
+            'accessCode' => Settings::get('access_code', ''),
         ]);
+    }
+
+    /** Imposta/rimuove il codice di accesso aziendale (porta d'ingresso). */
+    public function updateAccessCode(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'codice' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $code = trim((string) ($data['codice'] ?? ''));
+        Settings::set('access_code', $code !== '' ? $code : null);
+
+        if ($code === '') {
+            return back()->with('ok', "Codice d'accesso disattivato: l'app è aperta a chi ha il link.");
+        }
+
+        // Mantiene sbloccato il dispositivo dell'admin che ha appena impostato il codice.
+        return back()
+            ->with('ok', "Codice d'accesso aggiornato. Gli altri dispositivi dovranno reinserirlo.")
+            ->withCookie(cookie(EnsureAccessCode::COOKIE, EnsureAccessCode::token($code), 60 * 24 * 365));
     }
 
     public function storeItem(Request $request): RedirectResponse

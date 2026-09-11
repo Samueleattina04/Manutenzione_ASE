@@ -244,6 +244,15 @@ L'elenco delle richieste e il dettaglio si aggiornano da soli ogni pochi secondi
 (polling), così il manutentore vede comparire subito le nuove richieste e
 l'operatore vede il cambio di stato senza ricaricare la pagina.
 
+## Codice di accesso aziendale (per l'uso pubblico)
+
+Quando l'app è raggiungibile da fuori azienda, si può attivare un **codice di
+accesso** condiviso (da *Impostazioni → 🔒 Codice di accesso*, come admin): ogni
+dispositivo lo inserisce **una volta sola** e resta sbloccato, senza email né
+account. Utile perché gli operatori entrano senza password: il codice fa da
+"porta d'ingresso". Campo vuoto = disattivato (app aperta, adatto alla sola rete
+interna).
+
 ## Notifiche push sul telefono
 
 L'app può inviare **notifiche push in tempo reale** sul telefono (Web Push, senza

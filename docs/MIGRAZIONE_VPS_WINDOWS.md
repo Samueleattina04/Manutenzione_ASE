@@ -130,16 +130,23 @@ Dopo aver messo `APP_URL`/`FORCE_HTTPS` nel `.env`, rilancia
 
 ---
 
-## 4. Cancello d'accesso (consigliato — operatori senza password)
+## 4. Cancello d'accesso — codice aziendale (consigliato)
 
 Gli operatori entrano **senza password**: su un sito pubblico conviene un filtro
-davanti. La via gratuita è **Cloudflare Access**:
-- porta il DNS del dominio su **Cloudflare** (piano Free), attiva il **proxy**
-  (nuvola arancione) verso `IP-VPS`, e crea un'app **Access** che chiede un login
-  aziendale (PIN via email). Vedi `docs/ACCESSO_ESTERNO.md`, sezione Access.
-- In alternativa, si può limitare l'accesso per **IP**.
+davanti. L'app ha già integrato un **codice di accesso aziendale**, pensato
+apposta per chi non ha email/telefoni aziendali:
 
-> Questo passo è opzionale ma raccomandato per la sicurezza dell'app.
+- da **Impostazioni → 🔒 Codice di accesso** (come admin), imposti un codice
+  condiviso (semplice, da comunicare a voce);
+- ogni **dispositivo** lo inserisce **una volta sola** e resta sbloccato (niente
+  email, niente PIN); i tablet di reparto li sblocchi tu in fase di installazione,
+  così gli operatori non vedono nulla di diverso;
+- se il codice viene cambiato, tutti i dispositivi lo reinseriscono (revoca
+  immediata). Campo vuoto = filtro disattivato.
+
+> Consiglio: attiva il codice **prima** di comunicare l'indirizzo pubblico.
+> (In alternativa, chi preferisce, può ancora usare Cloudflare Access — vedi
+> `docs/ACCESSO_ESTERNO.md` — ma per il vostro caso il codice interno è più comodo.)
 
 ---
 

@@ -9,6 +9,29 @@
     <div class="inline-error">{{ $errors->first() }}</div>
 @endif
 
+{{-- Codice di accesso aziendale (porta d'ingresso per dispositivo) --}}
+<div class="card" style="margin-bottom:18px">
+    <h3 style="margin:0 0 6px">🔒 Codice di accesso</h3>
+    <p class="muted" style="margin-top:0; font-size:14px">
+        Se impostato, ogni dispositivo deve inserire questo codice <strong>una volta sola</strong>
+        prima di usare l'app (utile quando l'app è raggiungibile da fuori azienda).
+        Lascia il campo <strong>vuoto</strong> per disattivarlo.
+        Cambiando il codice, tutti i dispositivi dovranno reinserirlo.
+    </p>
+    <form method="POST" action="{{ route('impostazioni.access-code') }}" data-guard
+          style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+        @csrf
+        <div class="field mb0" style="flex:1; min-width:220px">
+            <label>Codice (condiviso)</label>
+            <input type="text" name="codice" value="{{ $accessCode }}" placeholder="Es. un codice semplice da comunicare a voce" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary">Salva</button>
+    </form>
+    <div class="hint" style="margin-top:8px">
+        Stato attuale: <strong>{{ $accessCode !== '' && $accessCode !== null ? 'attivo' : 'disattivato (app aperta)' }}</strong>
+    </div>
+</div>
+
 <div style="display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
     @foreach([['Impianti', 'impianto', $impianti], ['Reparti', 'reparto', $reparti]] as [$titolo, $type, $items])
         <div class="card">

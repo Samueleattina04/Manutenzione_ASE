@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
         ]);
+        // Porta d'ingresso: se è impostato un codice di accesso aziendale,
+        // ogni dispositivo deve inserirlo una volta prima di usare l'app.
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureAccessCode::class,
+        ]);
         // Chi non è autenticato viene mandato alla scelta del profilo.
         $middleware->redirectGuestsTo('/entra');
 

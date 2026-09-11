@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessGateController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
@@ -8,6 +9,11 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
+// --- Porta d'ingresso (codice di accesso aziendale, per dispositivo) ---
+Route::get('/accesso', [AccessGateController::class, 'form'])->name('accesso.form');
+Route::post('/accesso', [AccessGateController::class, 'submit'])
+    ->middleware('throttle:10,1')->name('accesso.submit');
 
 // --- Accesso ---
 // Scelta del profilo (pagina iniziale per chi non è autenticato)
@@ -67,6 +73,7 @@ Route::middleware('auth')->group(function () {
 
         // Impostazioni: elenchi modificabili (impianti, reparti)
         Route::get('/impostazioni', [SettingsController::class, 'index'])->name('impostazioni.index');
+        Route::post('/impostazioni/codice-accesso', [SettingsController::class, 'updateAccessCode'])->name('impostazioni.access-code');
         Route::post('/impostazioni/voce', [SettingsController::class, 'storeItem'])->name('impostazioni.voce.store');
         Route::put('/impostazioni/voce/{listItem}', [SettingsController::class, 'updateItem'])->name('impostazioni.voce.update');
         Route::delete('/impostazioni/voce/{listItem}', [SettingsController::class, 'destroyItem'])->name('impostazioni.voce.destroy');
