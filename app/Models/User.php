@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'username', 'email', 'password', 'role', 'active'])]
+#[Fillable(['name', 'username', 'email', 'password', 'role', 'active', 'is_super_admin'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -21,12 +21,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active' => 'boolean',
+            'is_super_admin' => 'boolean',
         ];
     }
 
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /** Super-amministratore: admin con accesso alle impostazioni sensibili. */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'admin' && (bool) $this->is_super_admin;
     }
 
     public function isManutentore(): bool

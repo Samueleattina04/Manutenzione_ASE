@@ -28,6 +28,8 @@ class SettingsController extends Controller
     /** Imposta/rimuove il PIN operatori (richiesto a ogni accesso operatore). */
     public function updateOperatorPin(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isSuperAdmin(), 403, 'Riservato al super-amministratore.');
+
         $data = $request->validate([
             'pin' => ['nullable', 'string', 'max:20'],
         ]);
@@ -43,6 +45,8 @@ class SettingsController extends Controller
     /** Imposta/rimuove il codice di accesso aziendale (porta d'ingresso). */
     public function updateAccessCode(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isSuperAdmin(), 403, 'Riservato al super-amministratore.');
+
         $data = $request->validate([
             'codice' => ['nullable', 'string', 'max:100'],
         ]);

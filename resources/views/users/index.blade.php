@@ -25,7 +25,10 @@
                     <td><strong>{{ $user->name }}</strong></td>
                     <td>{{ $user->username }}</td>
                     <td>{{ $user->email ?: '—' }}</td>
-                    <td><span class="role-badge">{{ $ruoliLabel[$user->role] ?? $user->role }}</span></td>
+                    <td>
+                        <span class="role-badge">{{ $ruoliLabel[$user->role] ?? $user->role }}</span>
+                        @if($user->isSuperAdmin())<span class="role-badge" style="background:#5b3fa8; color:#fff" title="Super-amministratore">super</span>@endif
+                    </td>
                     <td>
                         @if($user->active)<span class="pill-on">Attivo</span>
                         @else<span class="pill-off">Disattivato</span>@endif
@@ -65,6 +68,14 @@
             <div class="field"><label>Ruolo <span class="req">*</span></label>
                 <select name="role">@foreach($roles as $r)<option value="{{ $r }}">{{ $ruoliLabel[$r] ?? $r }}</option>@endforeach</select>
             </div>
+            @if(auth()->user()->isSuperAdmin())
+                <div class="field">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600">
+                        <input type="checkbox" name="is_super_admin" value="1" style="width:auto"> Super-amministratore
+                    </label>
+                    <div class="hint">Solo per gli amministratori: può gestire PIN e codice d'accesso.</div>
+                </div>
+            @endif
             <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" placeholder="min 6 caratteri" required></div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" data-modal-close>Annulla</button>
@@ -93,6 +104,14 @@
                     </select>
                     @if($roleLocked)<input type="hidden" name="role" value="{{ $user->role }}">@endif
                 </div>
+                @if(auth()->user()->isSuperAdmin())
+                    <div class="field">
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600">
+                            <input type="checkbox" name="is_super_admin" value="1" style="width:auto" @checked($user->is_super_admin)> Super-amministratore
+                        </label>
+                        <div class="hint">Solo per gli amministratori: può gestire PIN e codice d'accesso.</div>
+                    </div>
+                @endif
                 @if($user->id !== auth()->id())
                     <div class="field">
                         <label style="display:flex; align-items:center; gap:8px; font-weight:600">

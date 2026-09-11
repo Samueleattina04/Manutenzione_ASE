@@ -9,6 +9,7 @@
     <div class="inline-error">{{ $errors->first() }}</div>
 @endif
 
+@if(auth()->user()->isSuperAdmin())
 {{-- PIN operatori: richiesto a ogni accesso operatore (consigliato) --}}
 <div class="card" style="margin-bottom:18px">
     <h3 style="margin:0 0 6px">🔢 PIN operatori</h3>
@@ -54,6 +55,7 @@
         Stato attuale: <strong>{{ $accessCode !== '' && $accessCode !== null ? 'attivo' : 'disattivato (app aperta)' }}</strong>
     </div>
 </div>
+@endif
 
 <div style="display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
     @foreach([['Impianti', 'impianto', $impianti], ['Reparti', 'reparto', $reparti]] as [$titolo, $type, $items])
