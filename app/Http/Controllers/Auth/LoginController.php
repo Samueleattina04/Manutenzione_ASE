@@ -29,7 +29,10 @@ class LoginController extends Controller
             return redirect()->route('richieste.index');
         }
 
-        return view('auth.reparto', ['reparti' => \App\Support\Lists::reparti()]);
+        return view('auth.reparto', [
+            'reparti' => \App\Support\Lists::reparti(),
+            'pinRichiesto' => trim((string) \App\Support\Settings::get('operator_pin', '')) !== '',
+        ]);
     }
 
     /**
@@ -45,6 +48,12 @@ class LoginController extends Controller
             'reparto.required' => 'Seleziona il reparto.',
             'reparto.in' => 'Reparto non valido.',
         ]);
+
+        // PIN operatori (condiviso): se impostato, va inserito a ogni accesso.
+        $pin = trim((string) \App\Support\Settings::get('operator_pin', ''));
+        if ($pin !== '' && ! hash_equals($pin, trim((string) $request->input('pin')))) {
+            return back()->withErrors(['pin' => 'PIN operatori non corretto.'])->withInput();
+        }
 
         $username = config('manutenzione.guest_operator_username', 'operatore');
         $operatore = User::where('username', $username)->where('active', true)->first();

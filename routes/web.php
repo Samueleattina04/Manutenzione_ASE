@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
         // Impostazioni: elenchi modificabili (impianti, reparti)
         Route::get('/impostazioni', [SettingsController::class, 'index'])->name('impostazioni.index');
         Route::post('/impostazioni/codice-accesso', [SettingsController::class, 'updateAccessCode'])->name('impostazioni.access-code');
+        Route::post('/impostazioni/pin-operatori', [SettingsController::class, 'updateOperatorPin'])->name('impostazioni.operator-pin');
         Route::post('/impostazioni/voce', [SettingsController::class, 'storeItem'])->name('impostazioni.voce.store');
         Route::put('/impostazioni/voce/{listItem}', [SettingsController::class, 'updateItem'])->name('impostazioni.voce.update');
         Route::delete('/impostazioni/voce/{listItem}', [SettingsController::class, 'destroyItem'])->name('impostazioni.voce.destroy');

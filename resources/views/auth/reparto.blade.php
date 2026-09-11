@@ -33,6 +33,14 @@
                         </select>
                         <div class="hint">Vedrai le richieste aperte dagli operatori di questo reparto.</div>
                     </div>
+                    @if($pinRichiesto)
+                        <div class="field">
+                            <label>PIN operatori <span class="req">*</span></label>
+                            <input type="password" name="pin" inputmode="numeric" autocomplete="off"
+                                   placeholder="Codice operatori" required>
+                            <div class="hint">Chiedi il PIN al tuo responsabile.</div>
+                        </div>
+                    @endif
                     <button type="submit" class="btn btn-primary btn-lg btn-block">Entra</button>
                 </form>
 

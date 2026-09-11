@@ -21,7 +21,23 @@ class SettingsController extends Controller
             'impianti' => ListItem::where('type', 'impianto')->orderBy('position')->orderBy('id')->get(),
             'reparti' => ListItem::where('type', 'reparto')->orderBy('position')->orderBy('id')->get(),
             'accessCode' => Settings::get('access_code', ''),
+            'operatorPin' => Settings::get('operator_pin', ''),
         ]);
+    }
+
+    /** Imposta/rimuove il PIN operatori (richiesto a ogni accesso operatore). */
+    public function updateOperatorPin(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'pin' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $pin = trim((string) ($data['pin'] ?? ''));
+        Settings::set('operator_pin', $pin !== '' ? $pin : null);
+
+        return back()->with('ok', $pin === ''
+            ? 'PIN operatori disattivato: gli operatori entrano solo scegliendo il reparto.'
+            : 'PIN operatori aggiornato: verrà richiesto a ogni accesso operatore.');
     }
 
     /** Imposta/rimuove il codice di accesso aziendale (porta d'ingresso). */

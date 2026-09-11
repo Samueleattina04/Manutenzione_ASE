@@ -9,13 +9,36 @@
     <div class="inline-error">{{ $errors->first() }}</div>
 @endif
 
-{{-- Codice di accesso aziendale (porta d'ingresso per dispositivo) --}}
+{{-- PIN operatori: richiesto a ogni accesso operatore (consigliato) --}}
 <div class="card" style="margin-bottom:18px">
-    <h3 style="margin:0 0 6px">🔒 Codice di accesso</h3>
+    <h3 style="margin:0 0 6px">🔢 PIN operatori</h3>
     <p class="muted" style="margin-top:0; font-size:14px">
-        Se impostato, ogni dispositivo deve inserire questo codice <strong>una volta sola</strong>
-        prima di usare l'app (utile quando l'app è raggiungibile da fuori azienda).
-        Lascia il campo <strong>vuoto</strong> per disattivarlo.
+        Codice <strong>condiviso tra gli operatori</strong> (es. 4 cifre), richiesto
+        <strong>ogni volta</strong> che un operatore entra e sceglie il reparto (non viene
+        memorizzato sul dispositivo). Protegge la sezione operatori senza bisogno di
+        account o email. Lascia <strong>vuoto</strong> per disattivarlo.
+    </p>
+    <form method="POST" action="{{ route('impostazioni.operator-pin') }}" data-guard
+          style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+        @csrf
+        <div class="field mb0" style="flex:1; min-width:220px">
+            <label>PIN (condiviso tra gli operatori)</label>
+            <input type="text" name="pin" value="{{ $operatorPin }}" inputmode="numeric" placeholder="Es. 4826" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary">Salva</button>
+    </form>
+    <div class="hint" style="margin-top:8px">
+        Stato attuale: <strong>{{ $operatorPin !== '' && $operatorPin !== null ? 'attivo' : 'disattivato' }}</strong>
+    </div>
+</div>
+
+{{-- Codice di accesso di tutta l'app (opzionale, per dispositivo) --}}
+<div class="card" style="margin-bottom:18px">
+    <h3 style="margin:0 0 6px">🔒 Codice di accesso all'app <span class="muted" style="font-weight:400; font-size:13px">(opzionale)</span></h3>
+    <p class="muted" style="margin-top:0; font-size:14px">
+        Blocca <strong>l'intera app</strong> (anche il login manutentori): ogni dispositivo lo
+        inserisce <strong>una volta sola</strong> e resta sbloccato. Alternativo/aggiuntivo al
+        PIN operatori. Lascia <strong>vuoto</strong> se usi solo il PIN operatori.
         Cambiando il codice, tutti i dispositivi dovranno reinserirlo.
     </p>
     <form method="POST" action="{{ route('impostazioni.access-code') }}" data-guard
