@@ -19,40 +19,38 @@ class LoginController extends Controller
             return redirect()->route('richieste.index');
         }
 
-        return view('auth.entra');
+        return view('auth.entra', [
+            'pinOperatore' => trim((string) \App\Support\Settings::get('operator_pin', '')) !== '',
+        ]);
     }
 
-    /** Passo intermedio dell'accesso operatore: scelta del reparto. */
-    public function chooseReparto(): View|RedirectResponse
+    /** Pagina del PIN operatori (mostrata solo quando il PIN è attivo). */
+    public function operatorPinForm(): View|RedirectResponse
     {
         if (Auth::check()) {
             return redirect()->route('richieste.index');
         }
 
-        return view('auth.reparto', [
-            'reparti' => \App\Support\Lists::reparti(),
-            'pinRichiesto' => trim((string) \App\Support\Settings::get('operator_pin', '')) !== '',
-        ]);
+        // Se il PIN non è attivo, l'accesso operatore è diretto (nessuna pagina).
+        if (trim((string) \App\Support\Settings::get('operator_pin', '')) === '') {
+            return view('auth.operatore', ['pinRichiesto' => false]);
+        }
+
+        return view('auth.operatore', ['pinRichiesto' => true]);
     }
 
     /**
-     * Accesso libero come operatore: entra senza username e password dopo aver
-     * scelto il reparto. Il reparto raggruppa la visibilità delle richieste.
+     * Accesso libero come operatore: entra senza username e password.
+     * Se è impostato il PIN operatori, va inserito. Non si sceglie più il
+     * reparto: le richieste sono filtrabili per reparto dentro l'app.
      */
     public function enterAsOperatore(Request $request): RedirectResponse
     {
-        $reparti = \App\Support\Lists::reparti();
-        $data = $request->validate([
-            'reparto' => ['required', 'string', 'in:'.implode(',', $reparti)],
-        ], [
-            'reparto.required' => 'Seleziona il reparto.',
-            'reparto.in' => 'Reparto non valido.',
-        ]);
-
         // PIN operatori (condiviso): se impostato, va inserito a ogni accesso.
         $pin = trim((string) \App\Support\Settings::get('operator_pin', ''));
         if ($pin !== '' && ! hash_equals($pin, trim((string) $request->input('pin')))) {
-            return back()->withErrors(['pin' => 'PIN operatori non corretto.'])->withInput();
+            return redirect()->route('entra.operatore.reparto')
+                ->withErrors(['pin' => 'PIN operatori non corretto.']);
         }
 
         $username = config('manutenzione.guest_operator_username', 'operatore');
@@ -65,8 +63,6 @@ class LoginController extends Controller
 
         Auth::login($operatore);
         $request->session()->regenerate();
-        // Reparto d'accesso: usato solo per filtrare la visibilità.
-        $request->session()->put('op_reparto', $data['reparto']);
 
         return redirect()->route('richieste.index');
     }

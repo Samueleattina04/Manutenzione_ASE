@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#b5850b">
-    <title>Scegli il reparto — Richiesta Manutenzione</title>
+    <title>Accesso operatore — Richiesta Manutenzione</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
@@ -15,7 +15,7 @@
             <div class="login-inner">
                 <div class="logo">👷</div>
                 <h1>Accesso operatore</h1>
-                <p class="sub">Seleziona il tuo reparto</p>
+                <p class="sub">{{ $pinRichiesto ? 'Inserisci il PIN operatori' : 'Entra senza password' }}</p>
 
                 @if($errors->any())
                     <div class="inline-error">{{ $errors->first() }}</div>
@@ -23,21 +23,11 @@
 
                 <form method="POST" action="{{ route('entra.operatore') }}" data-guard>
                     @csrf
-                    <div class="field">
-                        <label>Reparto <span class="req">*</span></label>
-                        <select name="reparto" required autofocus>
-                            <option value="" disabled selected>Scegli il reparto…</option>
-                            @foreach($reparti as $rp)
-                                <option value="{{ $rp }}" @selected(old('reparto') === $rp)>{{ $rp }}</option>
-                            @endforeach
-                        </select>
-                        <div class="hint">Vedrai le richieste aperte dagli operatori di questo reparto.</div>
-                    </div>
                     @if($pinRichiesto)
                         <div class="field">
                             <label>PIN operatori <span class="req">*</span></label>
                             <input type="password" name="pin" inputmode="numeric" autocomplete="off"
-                                   placeholder="Codice operatori" required>
+                                   placeholder="Codice operatori" autofocus required>
                             <div class="hint">Chiedi il PIN al tuo responsabile.</div>
                         </div>
                     @endif

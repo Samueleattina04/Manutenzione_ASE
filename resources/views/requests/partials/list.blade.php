@@ -6,7 +6,7 @@
            class="stat {{ $stats['da_assegnare'] > 0 ? 'alert' : '' }}" style="text-decoration:none">
             <div class="n">{{ $stats['da_assegnare'] }}</div><div class="l">Da assegnare</div>
         </a>
-    @else
+    @elseif(! auth()->user()->isOperatore())
         <div class="stat"><div class="n">{{ $stats['mie'] }}</div><div class="l">Le mie richieste</div></div>
     @endif
 </div>
@@ -15,7 +15,7 @@
     <div class="empty">
         <div class="big">📭</div>
         @if(auth()->user()->isOperatore())
-            <div>Nessuna richiesta per il reparto <strong>{{ session('op_reparto') }}</strong>.<br>Tocca <strong>Nuova</strong> per crearne una.</div>
+            <div>Nessuna richiesta trovata.<br>Tocca <strong>Nuova</strong> per crearne una.</div>
         @else
             <div>Nessuna richiesta trovata con questi filtri.</div>
         @endif

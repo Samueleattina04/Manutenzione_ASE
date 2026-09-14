@@ -45,13 +45,14 @@
 
         {{-- Reparto --}}
         <div class="field">
-            <label>Reparto</label>
-            <select name="reparto">
-                <option value="">Scegli (facoltativo)</option>
+            <label>Reparto <span class="req">*</span></label>
+            <select name="reparto" required>
+                <option value="" disabled @selected(! old('reparto'))>Scegli il reparto…</option>
                 @foreach($reparti as $rp)
                     <option value="{{ $rp }}" @selected(old('reparto') === $rp)>{{ $rp }}</option>
                 @endforeach
             </select>
+            @error('reparto')<div class="field-error">{{ $message }}</div>@enderror
         </div>
 
         {{-- Destinatario --}}

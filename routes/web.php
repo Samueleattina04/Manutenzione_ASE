@@ -19,7 +19,7 @@ Route::post('/accesso', [AccessGateController::class, 'submit'])
 // Scelta del profilo (pagina iniziale per chi non è autenticato)
 Route::get('/entra', [LoginController::class, 'chooser'])->name('entra');
 // Operatore: accesso libero senza credenziali, previa scelta del reparto
-Route::get('/entra/operatore', [LoginController::class, 'chooseReparto'])->name('entra.operatore.reparto');
+Route::get('/entra/operatore', [LoginController::class, 'operatorPinForm'])->name('entra.operatore.reparto');
 Route::post('/entra/operatore', [LoginController::class, 'enterAsOperatore'])
     ->middleware('throttle:30,1')->name('entra.operatore');
 // Manutentore / Amministratore: username e password

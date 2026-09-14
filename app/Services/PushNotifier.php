@@ -41,11 +41,11 @@ class PushNotifier
         ]);
     }
 
-    /** Cambio di stato / nuovo intervento → avvisa gli operatori del reparto d'accesso. */
+    /** Cambio di stato / nuovo intervento → avvisa gli operatori del reparto della richiesta. */
     public function statoAggiornato(MaintenanceRequest $r): void
     {
         $stato = config('manutenzione.stati.'.$r->status.'.label', $r->status);
-        $this->inviaAReparto($r->reparto_accesso, [
+        $this->inviaAReparto($r->reparto, [
             'title' => 'Aggiornamento richiesta #'.$r->id,
             'body' => $r->macchinario.' · '.$stato,
             'url' => $this->url($r),
@@ -59,7 +59,7 @@ class PushNotifier
         if (! $r->etaLabel()) {
             return;
         }
-        $this->inviaAReparto($r->reparto_accesso, [
+        $this->inviaAReparto($r->reparto, [
             'title' => 'Intervento previsto · richiesta #'.$r->id,
             'body' => 'Il manutentore sarà in reparto '.$r->etaLabel(),
             'url' => $this->url($r),

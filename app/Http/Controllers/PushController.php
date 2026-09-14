@@ -28,7 +28,7 @@ class PushController extends Controller
         ]);
 
         $user = $request->user();
-        $reparto = $user->isOperatore() ? (string) $request->session()->get('op_reparto') : null;
+        $reparto = null; // gli operatori vedono tutte le richieste (nessun reparto d'accesso)
 
         PushSubscription::updateOrCreate(
             ['endpoint_hash' => hash('sha256', $data['endpoint'])],

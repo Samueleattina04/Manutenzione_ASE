@@ -5,6 +5,7 @@
     @php
         $priorita = config('manutenzione.priorita');
         $impianti = \App\Support\Lists::impianti();
+        $reparti = \App\Support\Lists::reparti();
     @endphp
 
     {{-- Filtri di stato --}}
@@ -15,6 +16,12 @@
             @if($filters['mine'])<input type="hidden" name="mine" value="1">@endif
             @if($filters['da_assegnare'])<input type="hidden" name="da_assegnare" value="1">@endif
             <input type="search" name="q" class="search" value="{{ $filters['q'] }}" placeholder="🔎 Cerca macchinario, reparto, operatore…">
+            <select name="reparto" onchange="this.form.submit()">
+                <option value="">Tutti i reparti</option>
+                @foreach($reparti as $rp)
+                    <option value="{{ $rp }}" @selected($filters['reparto'] === $rp)>{{ $rp }}</option>
+                @endforeach
+            </select>
             <select name="impianto" onchange="this.form.submit()">
                 <option value="">Tutti gli impianti</option>
                 @foreach($impianti as $imp)

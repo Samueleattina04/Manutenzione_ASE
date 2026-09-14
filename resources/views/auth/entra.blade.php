@@ -21,15 +21,29 @@
                     <div class="inline-error">{{ $errors->first() }}</div>
                 @endif
 
-                {{-- Operatore: sceglie il reparto e poi entra, senza credenziali --}}
-                <a href="{{ route('entra.operatore.reparto') }}" class="role-choice role-op">
-                    <span class="role-ic">👷</span>
-                    <span class="role-txt">
-                        <strong>Operatore</strong>
-                        <small>Scegli il reparto ed entra, senza password</small>
-                    </span>
-                    <span class="role-arrow">→</span>
-                </a>
+                {{-- Operatore: entra senza credenziali (col PIN se attivo) --}}
+                @if($pinOperatore)
+                    <a href="{{ route('entra.operatore.reparto') }}" class="role-choice role-op">
+                        <span class="role-ic">👷</span>
+                        <span class="role-txt">
+                            <strong>Operatore</strong>
+                            <small>Entra con il PIN operatori</small>
+                        </span>
+                        <span class="role-arrow">→</span>
+                    </a>
+                @else
+                    <form method="POST" action="{{ route('entra.operatore') }}" data-guard>
+                        @csrf
+                        <button type="submit" class="role-choice role-op" style="width:100%; border:0; text-align:left; cursor:pointer">
+                            <span class="role-ic">👷</span>
+                            <span class="role-txt">
+                                <strong>Operatore</strong>
+                                <small>Entra senza password</small>
+                            </span>
+                            <span class="role-arrow">→</span>
+                        </button>
+                    </form>
+                @endif
 
                 {{-- Manutentore / Amministratore: username e password --}}
                 <a href="{{ route('login') }}" class="role-choice">

@@ -80,7 +80,7 @@ class RequestController extends Controller
             'impianto' => ['required', 'string', 'in:'.implode(',', array_merge($impianti, ['Altro']))],
             'impianto_altro' => ['nullable', 'string', 'max:255', 'required_if:impianto,Altro'],
             'macchinario' => ['required', 'string', 'max:255'],
-            'reparto' => ['nullable', 'string', 'in:'.implode(',', $reparti)],
+            'reparto' => ['required', 'string', 'in:'.implode(',', $reparti)],
             'destinatario' => ['required', 'string', 'in:'.implode(',', $destinatari)],
             'descrizione' => ['nullable', 'string'],
             'priorita' => ['required', 'string', 'in:'.implode(',', $priorita)],
@@ -92,6 +92,7 @@ class RequestController extends Controller
             'impianto.required' => "Scegli l'impianto.",
             'impianto_altro.required_if' => "Specifica l'impianto (campo Altro).",
             'macchinario.required' => "Inserisci l'impianto o macchinario in questione.",
+            'reparto.required' => 'Scegli il reparto.',
             'destinatario.required' => 'Scegli il destinatario.',
             'operatore.required' => 'Il campo Operatore è obbligatorio.',
         ]);
@@ -104,10 +105,6 @@ class RequestController extends Controller
         }
         // L'operatore è anonimo (account condiviso): leghiamo la richiesta al
         // reparto scelto all'accesso, così tutti gli operatori di quel reparto
-        // la vedono (anche da un altro dispositivo o dopo il logout).
-        if ($request->user()->isOperatore()) {
-            $req->reparto_accesso = $this->operatorReparto($request);
-        }
         $req->save();
 
         $this->storePhotos($request, $req, 'problema');
@@ -279,11 +276,7 @@ class RequestController extends Controller
         $user = $request->user();
 
         return MaintenanceRequest::query()
-            // Operatore: solo il reparto scelto all'accesso.
-            ->when(
-                $user->isOperatore(),
-                fn ($q) => $q->where('reparto_accesso', $this->operatorReparto($request))
-            )
+            // Operatore: vede tutte le richieste; filtra per reparto dalla lista.
             // Manutentore interno: tutte le richieste di manutenzione interna.
             ->when(
                 $user->isManutentore(),
@@ -317,6 +310,7 @@ class RequestController extends Controller
             )
             ->when($f['priorita'] !== '', fn ($q) => $q->where('priorita', $f['priorita']))
             ->when($f['impianto'] !== '', fn ($q) => $q->where('impianto', $f['impianto']))
+            ->when($f['reparto'] !== '', fn ($q) => $q->where('reparto', $f['reparto']))
             // Richieste esterne/straordinarie ancora da assegnare a un manutentore.
             ->when($f['da_assegnare'], fn ($q) => $q->whereIn('destinatario', ['esterna', 'straordinaria'])->whereNull('external_maintainer_id'))
             // Filtro per data di apertura (dal / al inclusi).
@@ -344,6 +338,7 @@ class RequestController extends Controller
             'status' => (string) $request->query('status', 'attive'),
             'priorita' => (string) $request->query('priorita', ''),
             'impianto' => (string) $request->query('impianto', ''),
+            'reparto' => (string) $request->query('reparto', ''),
             'q' => trim((string) $request->query('q', '')),
             'mine' => $request->boolean('mine'),
             'da_assegnare' => $request->boolean('da_assegnare'),
@@ -378,21 +373,12 @@ class RequestController extends Controller
         ];
     }
 
-    /** Reparto scelto dall'operatore all'accesso (dalla sessione). */
-    private function operatorReparto(Request $request): string
-    {
-        return (string) $request->session()->get('op_reparto', '');
-    }
-
     /** Blocca chi tenta di vedere una richiesta fuori dalla propria visibilità. */
     private function guardAccess(Request $request, MaintenanceRequest $richiesta): void
     {
         $user = $request->user();
 
-        if ($user->isOperatore()
-            && $richiesta->reparto_accesso !== $this->operatorReparto($request)) {
-            abort(404);
-        }
+        // L'operatore può vedere tutte le richieste (filtra per reparto dalla lista).
 
         if ($user->isManutentore()
             && $richiesta->destinatario !== 'interna') {

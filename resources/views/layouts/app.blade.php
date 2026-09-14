@@ -54,9 +54,6 @@
                 </div>
             </div>
         </div>
-        @if($u->isOperatore() && session('op_reparto'))
-            <div class="reparto-bar">🏭 Reparto: <strong>{{ session('op_reparto') }}</strong></div>
-        @endif
     </header>
 @endauth
 
