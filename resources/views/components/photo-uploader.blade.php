@@ -1,17 +1,20 @@
-@props(['hint' => 'Puoi scattare una foto o sceglierla dalla galleria'])
+@props(['hint' => 'Scatta una foto o scegli dalla galleria'])
 {{--
-    Uploader foto con un unico pulsante: su smartphone/tablet apre il menu
-    nativo che permette di SCATTARE una foto con la fotocamera OPPURE di
-    sceglierla dalla galleria/file.
-    Nota: l'input NON usa "multiple" né "capture", perché "multiple" su
-    Android nasconde l'opzione fotocamera. Si aggiunge una foto alla volta
-    (ritoccando il pulsante) e le foto vengono accumulate via JavaScript nel
-    campo "carrier" (name="foto[]") dopo la compressione lato client.
+    Uploader foto con DUE pulsanti espliciti, per avere lo stesso
+    comportamento su iPhone e Android:
+      • "Scatta foto"  → apre direttamente la fotocamera (capture);
+      • "Galleria"     → apre la galleria/file (selezione anche multipla).
+    Le foto vengono compresse lato client e accumulate nel campo "carrier"
+    (name="foto[]"). Il JavaScript (public/js/app.js) gestisce più input
+    "data-picker" nello stesso uploader.
 --}}
 <div class="uploader" data-uploader>
     <div class="uploader-actions">
-        <label class="uploader-btn">📷 Aggiungi foto
-            <input type="file" accept="image/*" data-picker hidden>
+        <label class="uploader-btn">📷 Scatta foto
+            <input type="file" accept="image/*" capture="environment" data-picker hidden>
+        </label>
+        <label class="uploader-btn">🖼️ Galleria
+            <input type="file" accept="image/*" multiple data-picker hidden>
         </label>
     </div>
     <div class="hint">{{ $hint }}</div>
