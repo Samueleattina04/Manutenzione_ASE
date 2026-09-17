@@ -68,7 +68,8 @@ class WebPush
     public static function generateVapidKeys(): array
     {
         $key = self::newEcKey();
-        openssl_pkey_export($key, $pem);
+        $opts = ($cnf = self::opensslConf()) ? ['config' => $cnf] : [];
+        openssl_pkey_export($key, $pem, null, $opts);
 
         return [
             'public' => self::b64uEncode(self::rawPublicFromKey($key)),
@@ -151,7 +152,44 @@ class WebPush
 
     private static function newEcKey()
     {
-        return openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $args = ['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1'];
+        if ($cnf = self::opensslConf()) {
+            $args['config'] = $cnf;
+        }
+
+        $key = openssl_pkey_new($args);
+        if ($key === false) {
+            throw new \RuntimeException(
+                'Generazione chiave EC non riuscita: OpenSSL non riesce a leggere la sua '
+                .'configurazione (openssl.cnf). Su Windows imposta OPENSSL_CONF nel .env con '
+                .'il percorso di un openssl.cnf valido (es. C:/xampp/apache/conf/openssl.cnf).'
+            );
+        }
+
+        return $key;
+    }
+
+    /**
+     * Percorso di un openssl.cnf valido, se necessario (soprattutto su Windows).
+     * Usa OPENSSL_CONF dal .env se impostato, altrimenti prova i percorsi tipici
+     * di XAMPP. Ritorna null se non serve/non trovato (es. su Linux, dove OpenSSL
+     * trova la configurazione da solo).
+     */
+    private static function opensslConf(): ?string
+    {
+        $candidates = [
+            (string) config('webpush.openssl_conf'),
+            'C:/xampp/apache/conf/openssl.cnf',
+            'C:/xampp/php/extras/ssl/openssl.cnf',
+        ];
+
+        foreach ($candidates as $path) {
+            if ($path !== '' && is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     private static function rawPublicFromKey($key): string

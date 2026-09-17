@@ -14,4 +14,10 @@ return [
 
     // Contatto del mittente (richiesto dallo standard VAPID).
     'subject' => env('WEBPUSH_SUBJECT', 'mailto:'.env('MAIL_FROM_ADDRESS', 'manutenzionease@gmail.com')),
+
+    // Percorso di un file openssl.cnf valido. Serve su Windows, dove OpenSSL
+    // non trova da solo la sua configurazione e la generazione delle chiavi EC
+    // fallisce ("Cannot get key from parameter 1"). Se vuoto, il codice prova
+    // da solo i percorsi tipici di XAMPP.
+    'openssl_conf' => env('OPENSSL_CONF', ''),
 ];
