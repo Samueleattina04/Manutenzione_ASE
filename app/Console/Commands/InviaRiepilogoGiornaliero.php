@@ -16,7 +16,7 @@ class InviaRiepilogoGiornaliero extends Command
     protected $signature = 'richieste:riepilogo
                             {--dry : Non invia le email, mostra solo cosa verrebbe inviato}';
 
-    protected $description = 'Invia ad amministratori e manutentori il riepilogo delle richieste aperte (con allegato Excel).';
+    protected $description = 'Invia agli amministratori il riepilogo delle richieste aperte (con allegato Excel).';
 
     /** Stati considerati "aperti" (ancora da lavorare). */
     private const STATI_CHIUSI = ['risolta', 'chiusa'];
@@ -27,12 +27,13 @@ class InviaRiepilogoGiornaliero extends Command
         $dataOggi = now()->format('d/m/Y');
         $stamp = now()->format('Y-m-d');
 
-        // Destinatari: admin e manutentori (interni/esterni/straordinari) attivi con un'email.
-        $destinatari = User::whereIn('role', ['admin', 'manutentore', 'manutentore_esterno', 'manutentore_straordinario'])
+        // Destinatari: solo gli amministratori attivi con un'email (ricevono il
+        // riepilogo di TUTTE le richieste aperte).
+        $destinatari = User::where('role', 'admin')
             ->where('active', true)
             ->whereNotNull('email')
             ->where('email', '!=', '')
-            ->orderBy('role')
+            ->orderBy('name')
             ->get();
 
         $inviate = 0;
