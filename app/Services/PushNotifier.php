@@ -30,6 +30,22 @@ class PushNotifier
         ]);
     }
 
+    /** Nuova richiesta esterna → avvisa gli amministratori (devono assegnarla). */
+    public function nuovaRichiestaEsterna(MaintenanceRequest $r): void
+    {
+        $ids = User::where('role', 'admin')->where('active', true)->pluck('id')->all();
+        if (! $ids) {
+            return;
+        }
+
+        $this->inviaAUtenti($ids, [
+            'title' => 'Nuova richiesta esterna da assegnare #'.$r->id,
+            'body' => trim($r->impiantoLabel().' · '.$r->macchinario),
+            'url' => $this->url($r),
+            'tag' => 'richiesta-'.$r->id,
+        ]);
+    }
+
     /** Richiesta assegnata a un manutentore (esterno/straordinario) → avvisa lui. */
     public function assegnata(MaintenanceRequest $r, User $manutentore): void
     {

@@ -117,6 +117,9 @@ class RequestController extends Controller
             $this->assegnaStraordinario($req);
         } elseif ($req->destinatario === 'interna') {
             (new PushNotifier())->nuovaRichiestaInterna($req);
+        } elseif ($req->destinatario === 'esterna') {
+            // Nessun manutentore ancora assegnato: avvisa gli admin che devono assegnarla.
+            (new PushNotifier())->nuovaRichiestaEsterna($req);
         }
 
         return redirect()
