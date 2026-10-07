@@ -15,7 +15,7 @@
             <input type="hidden" name="priorita" value="{{ $filters['priorita'] }}">
             @if($filters['mine'])<input type="hidden" name="mine" value="1">@endif
             @if($filters['da_assegnare'])<input type="hidden" name="da_assegnare" value="1">@endif
-            <input type="search" name="q" class="search" value="{{ $filters['q'] }}" placeholder="🔎 Cerca macchinario, reparto, operatore…">
+            <input type="search" name="q" class="search" value="{{ $filters['q'] }}" placeholder="🔎 Cerca n° ticket (#45), macchinario, reparto…">
             <select name="reparto" onchange="this.form.submit()">
                 <option value="">Tutti i reparti</option>
                 @foreach($reparti as $rp)

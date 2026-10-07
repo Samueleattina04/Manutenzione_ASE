@@ -65,6 +65,9 @@
                 </a>
             </div>
         </div>
+        <p style="text-align:center; margin:16px 0 0; color:#9aa0a6; font-size:12px">
+            creata e sviluppata da <strong>Samuele Attinà</strong>
+        </p>
     </div>
 </body>
 </html>

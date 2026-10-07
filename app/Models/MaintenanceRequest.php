@@ -125,6 +125,17 @@ class MaintenanceRequest extends Model
         return $this->richiedeAssegnazione() && ! $this->external_maintainer_id;
     }
 
+    /**
+     * Una richiesta è "lavorabile" (prendibile in carico / aggiornabile) solo
+     * se non è in attesa di assegnazione. In particolare la manutenzione esterna
+     * va prima assegnata a un manutentore esterno (oppure trasformata in interna
+     * dall'amministratore) prima che chiunque possa lavorarci.
+     */
+    public function lavorabile(): bool
+    {
+        return ! $this->daAssegnare();
+    }
+
     /** Etichetta del ruolo del manutentore assegnato, in base al destinatario. */
     public function manutentoreRuoloLabel(): string
     {

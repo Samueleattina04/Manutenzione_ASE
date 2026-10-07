@@ -164,6 +164,7 @@ class RequestController extends Controller
     public function storeUpdate(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
         $this->guardAccess($request, $richiesta);
+        $this->assertLavorabile($richiesta);
 
         $statiValidi = config('manutenzione.stati_manutentore');
 
@@ -322,12 +323,17 @@ class RequestController extends Controller
             ->when($f['mine'], fn ($q) => $q->where('created_by', $request->user()->id))
             ->when($f['q'] !== '', function ($q) use ($f) {
                 $like = '%'.$f['q'].'%';
-                $q->where(function ($w) use ($like) {
+                // Permette di cercare per numero di ticket: "#45" oppure "45".
+                $numero = ltrim($f['q'], '#');
+                $q->where(function ($w) use ($like, $numero) {
                     $w->where('macchinario', 'like', $like)
                         ->orWhere('descrizione', 'like', $like)
                         ->orWhere('reparto', 'like', $like)
                         ->orWhere('operatore', 'like', $like)
                         ->orWhere('note', 'like', $like);
+                    if ($numero !== '' && ctype_digit($numero)) {
+                        $w->orWhere('id', (int) $numero);
+                    }
                 });
             })
             ->orderByRaw("CASE WHEN status IN ('risolta','chiusa') THEN 2 ELSE 1 END asc")
@@ -400,11 +406,28 @@ class RequestController extends Controller
         }
     }
 
+    /**
+     * Blocca qualsiasi lavorazione (presa in carico, aggiornamento, tempo di
+     * intervento) su una richiesta che richiede assegnazione ma non è ancora
+     * stata assegnata a un manutentore. In pratica la manutenzione esterna non
+     * è lavorabile finché l'admin non la assegna a un manutentore esterno
+     * (oppure non la trasforma in manutenzione interna).
+     */
+    private function assertLavorabile(MaintenanceRequest $richiesta): void
+    {
+        abort_if(
+            ! $richiesta->lavorabile(),
+            403,
+            'Richiesta non ancora assegnata a un manutentore: va prima assegnata dall’amministratore.'
+        );
+    }
+
     /** Imposta il tempo di intervento previsto (manutentore/admin). */
     public function setEta(Request $request, MaintenanceRequest $richiesta): RedirectResponse
     {
         abort_unless($request->user()->canManutentore(), 403, 'Permesso negato');
         $this->guardAccess($request, $richiesta);
+        $this->assertLavorabile($richiesta);
 
         $opzioni = array_keys(config('manutenzione.eta_opzioni'));
 
@@ -453,6 +476,7 @@ class RequestController extends Controller
 
         $dest = $request->input('destinatario');
         $precedente = $richiesta->external_maintainer_id;
+        $destPrecedente = $richiesta->destinatario;
         $richiesta->destinatario = $dest;
         $redirect = redirect()->route('richieste.show', $richiesta);
 
@@ -460,6 +484,12 @@ class RequestController extends Controller
         if ($dest === 'interna') {
             $richiesta->external_maintainer_id = null;
             $richiesta->save();
+
+            // Se prima era di altro tipo (es. esterna da assegnare), avvisa i
+            // manutentori interni che ora possono prenderla in carico.
+            if ($destPrecedente !== 'interna') {
+                (new PushNotifier())->nuovaRichiestaInterna($richiesta);
+            }
 
             return $redirect->with('ok', 'Richiesta impostata come manutenzione interna: visibile a tutti i manutentori interni.');
         }

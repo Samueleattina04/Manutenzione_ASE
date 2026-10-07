@@ -103,8 +103,18 @@
     </div>
 @endif
 
+{{-- Richiesta che richiede assegnazione (es. esterna) ancora da assegnare: non lavorabile --}}
+@if($me->canManutentore() && ! $req->lavorabile())
+    <div class="action-card">
+        <div class="hint" style="margin:0">
+            🔒 Questa richiesta di <strong>{{ $req->destinatarioLabel() }}</strong> non è ancora assegnata a un manutentore:
+            non è possibile prenderla in carico o aggiornarla finché l’amministratore non la assegna@if($req->isEsterna()) (oppure non la trasforma in manutenzione interna)@endif.
+        </div>
+    </div>
+@endif
+
 {{-- Manutentore/admin: tempo di intervento previsto (visibile all'operatore) --}}
-@if($me->canManutentore() && ! $req->isDone())
+@if($me->canManutentore() && ! $req->isDone() && $req->lavorabile())
     <div class="action-card">
         <div class="block-title" style="margin-top:0">🕒 Tempo di intervento</div>
         <p class="muted" style="margin:-4px 0 10px; font-size:13px">
@@ -136,7 +146,7 @@
 @endif
 
 {{-- Manutentore/admin: pannello di aggiornamento --}}
-@if($me->canManutentore() && $req->status !== 'chiusa')
+@if($me->canManutentore() && $req->status !== 'chiusa' && $req->lavorabile())
     <div class="action-card">
         <div class="block-title" style="margin-top:0">Aggiorna la richiesta</div>
 

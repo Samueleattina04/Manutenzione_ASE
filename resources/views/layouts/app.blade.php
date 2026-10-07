@@ -65,6 +65,10 @@
             <div class="flash warn">{{ session('warn') }}</div>
         @endif
         @yield('content')
+
+        <footer style="text-align:center; padding:22px 4px 8px; color:#9aa0a6; font-size:12px">
+            creata e sviluppata da <strong>Samuele Attinà</strong>
+        </footer>
     </main>
 
 @auth
