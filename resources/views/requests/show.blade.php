@@ -108,7 +108,7 @@
     <div class="action-card">
         <div class="hint" style="margin:0">
             🔒 Questa richiesta di <strong>{{ $req->destinatarioLabel() }}</strong> non è ancora assegnata a un manutentore:
-            non è possibile prenderla in carico o aggiornarla finché l’amministratore non la assegna@if($req->isEsterna()) (oppure non la trasforma in manutenzione interna)@endif.
+            non è possibile prenderla in carico o aggiornarla finché l’amministratore non la assegna{{ $req->isEsterna() ? ' (oppure non la trasforma in manutenzione interna)' : '' }}.
         </div>
     </div>
 @endif
