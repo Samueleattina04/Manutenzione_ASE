@@ -5,7 +5,7 @@ namespace App\Support;
 use Illuminate\Http\UploadedFile;
 
 /**
- * Ottimizza le foto caricate per ridurne il peso su disco.
+ * Ottimizza le foto per ridurne il peso su disco.
  *
  * Le immagini che arrivano dal telefono sono spesso da 3-8 MB (12+ megapixel):
  * vengono ridimensionate (lato lungo max da configurazione) e ricompresse in
@@ -14,20 +14,17 @@ use Illuminate\Http\UploadedFile;
  * più che adeguata alla consultazione.
  *
  * Usa solo l'estensione GD (nessuna dipendenza aggiuntiva). Se l'immagine non è
- * gestibile (es. formato HEIC non supportato da GD), restituisce null e il
- * chiamante salva il file originale senza perdere il caricamento.
+ * gestibile (es. formato HEIC non supportato da GD), restituisce null.
  */
 class ImageOptimizer
 {
     /**
+     * Ottimizza un file appena caricato (usato in fase di upload).
+     *
      * @return array{contents:string, extension:string, mime:string, width:int, height:int}|null
      */
     public static function optimize(UploadedFile $file): ?array
     {
-        if (! extension_loaded('gd') || ! function_exists('imagecreatefromstring')) {
-            return null;
-        }
-
         $path = $file->getRealPath();
         if (! $path || ! is_readable($path)) {
             return null;
@@ -38,14 +35,48 @@ class ImageOptimizer
             return null;
         }
 
+        return self::process($raw, $file->getClientMimeType(), $path);
+    }
+
+    /**
+     * Ottimizza un'immagine già presente su disco (usato dal comando che
+     * ricomprime le foto caricate in precedenza).
+     *
+     * @return array{contents:string, extension:string, mime:string, width:int, height:int}|null
+     */
+    public static function optimizeFile(string $absolutePath, ?string $mime = null): ?array
+    {
+        if (! is_readable($absolutePath)) {
+            return null;
+        }
+
+        $raw = @file_get_contents($absolutePath);
+        if ($raw === false || $raw === '') {
+            return null;
+        }
+
+        return self::process($raw, $mime, $absolutePath);
+    }
+
+    /**
+     * Nucleo dell'ottimizzazione: ridimensiona e ricomprime i byte dell'immagine.
+     *
+     * @return array{contents:string, extension:string, mime:string, width:int, height:int}|null
+     */
+    private static function process(string $raw, ?string $mimeHint, ?string $exifPath): ?array
+    {
+        if (! extension_loaded('gd') || ! function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
         $img = @imagecreatefromstring($raw);
         if (! $img) {
-            // Formato non supportato da GD (es. HEIC/HEIF): salva l'originale.
+            // Formato non supportato da GD (es. HEIC/HEIF).
             return null;
         }
 
         try {
-            $img = self::applyExifOrientation($img, $path, $file);
+            $img = self::applyExifOrientation($img, $exifPath, $mimeHint);
 
             $w = imagesx($img);
             $h = imagesy($img);
@@ -95,6 +126,7 @@ class ImageOptimizer
             if (ob_get_level() > 0) {
                 ob_end_clean();
             }
+
             return null;
         } finally {
             if ($img instanceof \GdImage) {
@@ -129,18 +161,18 @@ class ImageOptimizer
      * Applica l'orientamento EXIF (solo per i JPEG) così la foto non risulta
      * ruotata o capovolta dopo la ricompressione.
      */
-    private static function applyExifOrientation(\GdImage $img, string $path, UploadedFile $file): \GdImage
+    private static function applyExifOrientation(\GdImage $img, ?string $exifPath, ?string $mimeHint): \GdImage
     {
-        if (! function_exists('exif_read_data')) {
+        if (! $exifPath || ! function_exists('exif_read_data')) {
             return $img;
         }
 
-        $mime = strtolower($file->getClientMimeType() ?: '');
-        if (! str_contains($mime, 'jpeg') && ! str_contains($mime, 'jpg')) {
+        $mime = strtolower($mimeHint ?: '');
+        if ($mime !== '' && ! str_contains($mime, 'jpeg') && ! str_contains($mime, 'jpg')) {
             return $img;
         }
 
-        $exif = @exif_read_data($path);
+        $exif = @exif_read_data($exifPath);
         if (! $exif || empty($exif['Orientation'])) {
             return $img;
         }
