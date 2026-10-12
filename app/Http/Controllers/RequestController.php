@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\MaintenanceRequest;
 use App\Models\RequestUpdate;
 use App\Services\PushNotifier;
+use App\Support\ImageOptimizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use App\Mail\RichiestaEsternaAssegnata;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -255,15 +257,31 @@ class RequestController extends Controller
             if (! $file) {
                 continue;
             }
-            $path = $file->store('uploads', 'local');
+
+            // Ridimensiona e ricomprime la foto per occupare poco spazio su disco.
+            // Se l'immagine non è gestibile, salva l'originale senza perdere il caricamento.
+            $optimized = ImageOptimizer::optimize($file);
+            if ($optimized) {
+                $path = 'uploads/'.Str::uuid()->toString().'.'.$optimized['extension'];
+                Storage::disk('local')->put($path, $optimized['contents']);
+                $mime = $optimized['mime'];
+                $size = strlen($optimized['contents']);
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME).'.'.$optimized['extension'];
+            } else {
+                $path = $file->store('uploads', 'local');
+                $mime = $file->getClientMimeType();
+                $size = $file->getSize();
+                $originalName = $file->getClientOriginalName();
+            }
+
             Attachment::create([
                 'maintenance_request_id' => $req->id,
                 'request_update_id' => $updateId,
                 'kind' => $kind,
                 'path' => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
-                'size' => $file->getSize(),
+                'original_name' => $originalName,
+                'mime_type' => $mime,
+                'size' => $size,
                 'uploaded_by' => $request->user()->id,
             ]);
         }
