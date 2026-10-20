@@ -320,8 +320,9 @@ class RequestController extends Controller
     private function filtered(Request $request): Builder
     {
         $f = $this->filterValues($request);
+        $user = $request->user();
 
-        return $this->visibleQuery($request)
+        $query = $this->visibleQuery($request)
             ->with('assignee')
             ->withCount('attachments')
             ->when($f['status'] === 'attive', fn ($q) => $q->whereNotIn('status', ['risolta', 'chiusa']))
@@ -353,7 +354,24 @@ class RequestController extends Controller
                         $w->orWhere('id', (int) $numero);
                     }
                 });
-            })
+            });
+
+        $manutentore = $user->isManutentore()
+            || $user->isManutentoreEsterno()
+            || $user->isManutentoreStraordinario();
+
+        if ($manutentore) {
+            // Per i manutentori: raggruppa le richieste per giornata (la più
+            // recente in cima) e, dentro ogni giornata, le ordina per priorità
+            // (rosso, giallo, verde) e poi dalla più recente.
+            return $query
+                ->orderByRaw('DATE(created_at) desc')
+                ->orderByRaw("FIELD(priorita,'rosso','giallo','verde') asc")
+                ->orderByDesc('created_at');
+        }
+
+        // Amministratore / operatore: prima le attive, poi per priorità e data.
+        return $query
             ->orderByRaw("CASE WHEN status IN ('risolta','chiusa') THEN 2 ELSE 1 END asc")
             ->orderByRaw("FIELD(priorita,'rosso','giallo','verde') asc")
             ->orderByDesc('created_at');
@@ -386,15 +404,10 @@ class RequestController extends Controller
     private function stats(Request $request): array
     {
         // I conteggi rispettano la visibilità del ruolo.
-        $scoped = ! $request->user()->isAdmin();
-
         return [
             'attive' => $this->visibleQuery($request)->whereNotIn('status', ['risolta', 'chiusa'])->count(),
             'urgenti' => $this->visibleQuery($request)->where('priorita', 'rosso')
                 ->whereNotIn('status', ['risolta', 'chiusa'])->count(),
-            'mie' => $scoped
-                ? $this->visibleQuery($request)->count()
-                : MaintenanceRequest::where('created_by', $request->user()->id)->count(),
             'da_assegnare' => MaintenanceRequest::whereIn('destinatario', ['esterna', 'straordinaria'])
                 ->whereNull('external_maintainer_id')->count(),
         ];

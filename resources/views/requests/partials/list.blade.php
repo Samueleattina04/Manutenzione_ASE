@@ -6,8 +6,6 @@
            class="stat {{ $stats['da_assegnare'] > 0 ? 'alert' : '' }}" style="text-decoration:none">
             <div class="n">{{ $stats['da_assegnare'] }}</div><div class="l">Da assegnare</div>
         </a>
-    @elseif(! auth()->user()->isOperatore())
-        <div class="stat"><div class="n">{{ $stats['mie'] }}</div><div class="l">Le mie richieste</div></div>
     @endif
 </div>
 
