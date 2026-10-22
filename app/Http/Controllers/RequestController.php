@@ -37,6 +37,7 @@ class RequestController extends Controller
         return view('requests.partials.list', [
             'requests' => $this->filtered($request)->get(),
             'stats' => $this->stats($request),
+            'filters' => $this->filterValues($request),
         ]);
     }
 
@@ -408,6 +409,9 @@ class RequestController extends Controller
             'attive' => $this->visibleQuery($request)->whereNotIn('status', ['risolta', 'chiusa'])->count(),
             'urgenti' => $this->visibleQuery($request)->where('priorita', 'rosso')
                 ->whereNotIn('status', ['risolta', 'chiusa'])->count(),
+            // Totale di tutte le richieste visibili (mostrato ai manutentori solo
+            // con il filtro "Tutte", dove corrisponde a quelle effettivamente in elenco).
+            'mie' => $this->visibleQuery($request)->count(),
             'da_assegnare' => MaintenanceRequest::whereIn('destinatario', ['esterna', 'straordinaria'])
                 ->whereNull('external_maintainer_id')->count(),
         ];
