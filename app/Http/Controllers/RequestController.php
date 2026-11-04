@@ -491,6 +491,40 @@ class RequestController extends Controller
             ->with('ok', 'Tempo di intervento previsto aggiornato: '.$richiesta->etaLabel().'.');
     }
 
+    /** Cambia la priorità di una richiesta (solo admin). */
+    public function updatePriorita(Request $request, MaintenanceRequest $richiesta): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403, 'Permesso negato');
+
+        $priorita = array_keys(config('manutenzione.priorita'));
+        $data = $request->validate([
+            'priorita' => ['required', 'in:'.implode(',', $priorita)],
+        ], [
+            'priorita.required' => 'Scegli la priorità.',
+            'priorita.in' => 'Priorità non valida.',
+        ]);
+
+        $precedente = $richiesta->priorita;
+        if ($data['priorita'] === $precedente) {
+            return redirect()->route('richieste.show', $richiesta)->with('ok', 'Priorità invariata.');
+        }
+
+        $richiesta->priorita = $data['priorita'];
+        $richiesta->save();
+
+        // Traccia il cambio nella cronologia della richiesta.
+        $da = config('manutenzione.priorita.'.$precedente.'.short', $precedente);
+        $a = config('manutenzione.priorita.'.$data['priorita'].'.short', $data['priorita']);
+        RequestUpdate::create([
+            'maintenance_request_id' => $richiesta->id,
+            'user_id' => $request->user()->id,
+            'status' => null,
+            'note' => "Priorità cambiata da {$da} a {$a}.",
+        ]);
+
+        return redirect()->route('richieste.show', $richiesta)->with('ok', "Priorità aggiornata: {$a}.");
+    }
+
     /**
      * Aggiorna il destinatario di una richiesta e la relativa assegnazione (solo admin):
      * - interna: nessun manutentore assegnato (la vedono tutti gli interni);

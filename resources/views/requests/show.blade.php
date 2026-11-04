@@ -72,6 +72,24 @@
         @endif
     </div>
 
+    {{-- Admin: cambia la priorità della richiesta --}}
+    <div class="action-card">
+        <div class="block-title" style="margin-top:0">🎚️ Priorità</div>
+        <form method="POST" action="{{ route('richieste.priorita', $req) }}" data-guard
+              style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+            @csrf
+            <div class="field mb0" style="flex:1; min-width:200px">
+                <label>Livello di priorità</label>
+                <select name="priorita">
+                    @foreach(config('manutenzione.priorita') as $val => $p)
+                        <option value="{{ $val }}" @selected($req->priorita === $val)>{{ $p['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Aggiorna priorità</button>
+        </form>
+    </div>
+
     <script>
     (function () {
         var sel = document.querySelector('[data-dest-select]');

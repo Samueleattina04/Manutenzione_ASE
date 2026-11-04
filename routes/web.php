@@ -46,9 +46,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/richieste/{richiesta}/tempo-intervento', [RequestController::class, 'setEta'])->name('richieste.eta');
     });
 
-    // Destinatario e assegnazione del manutentore (solo admin)
+    // Destinatario e assegnazione del manutentore + priorità (solo admin)
     Route::middleware('role:admin')->group(function () {
         Route::post('/richieste/{richiesta}/assegnazione', [RequestController::class, 'updateAssegnazione'])->name('richieste.assegnazione');
+        Route::post('/richieste/{richiesta}/priorita', [RequestController::class, 'updatePriorita'])->name('richieste.priorita');
     });
 
     // Allegati (immagini protette da login)
