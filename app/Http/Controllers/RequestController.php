@@ -333,6 +333,7 @@ class RequestController extends Controller
                 fn ($q) => $q->where('status', $f['status'])
             )
             ->when($f['priorita'] !== '', fn ($q) => $q->where('priorita', $f['priorita']))
+            ->when($f['destinatario'] !== '', fn ($q) => $q->where('destinatario', $f['destinatario']))
             ->when($f['impianto'] !== '', fn ($q) => $q->where('impianto', $f['impianto']))
             ->when($f['reparto'] !== '', fn ($q) => $q->where('reparto', $f['reparto']))
             // Richieste esterne/straordinarie ancora da assegnare a un manutentore.
@@ -383,6 +384,7 @@ class RequestController extends Controller
         return [
             'status' => (string) $request->query('status', 'attive'),
             'priorita' => (string) $request->query('priorita', ''),
+            'destinatario' => (string) $request->query('destinatario', ''),
             'impianto' => (string) $request->query('impianto', ''),
             'reparto' => (string) $request->query('reparto', ''),
             'q' => trim((string) $request->query('q', '')),
